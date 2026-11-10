@@ -19,11 +19,16 @@ func requireFFmpeg(t *testing.T) {
 	}
 }
 
-// makeFLAC writes a one-second 96 kHz test tone to path.
-func makeFLAC(t *testing.T, path string) {
+// makeFLAC writes a one-second 96 kHz test tone to path,
+// with optional Vorbis comments given as "KEY=value".
+func makeFLAC(t *testing.T, path string, comments ...string) {
 	t.Helper()
-	out, err := exec.Command("ffmpeg", "-nostdin", "-v", "error", "-y",
-		"-f", "lavfi", "-i", "sine=duration=1:sample_rate=96000", path).CombinedOutput()
+	args := []string{"-nostdin", "-v", "error", "-y",
+		"-f", "lavfi", "-i", "sine=duration=1:sample_rate=96000"}
+	for _, c := range comments {
+		args = append(args, "-metadata", c)
+	}
+	out, err := exec.Command("ffmpeg", append(args, path)...).CombinedOutput()
 	require.NoError(t, err, string(out))
 }
 
