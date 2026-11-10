@@ -10,22 +10,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestWithin(t *testing.T) {
-	tests := []struct {
-		parent, path string
-		want         bool
-	}{
-		{"/mnt/prudence/music", "/mnt/prudence/music", true},
-		{"/mnt/prudence/music", "/mnt/prudence/music/mirror", true},
-		{"/mnt/prudence/music", "/mnt/prudence/music-mirror", false}, // sibling, not child
-		{"/mnt/prudence/music", "/mnt/prudence", false},
-		{"/mnt/prudence/music", "/mnt/prudence/music/..odd name", true},
-	}
-	for _, tt := range tests {
-		assert.Equal(t, tt.want, within(tt.parent, tt.path), "within(%q, %q)", tt.parent, tt.path)
-	}
-}
-
 func TestCheckPaths(t *testing.T) {
 	root := t.TempDir()
 	lib := filepath.Join(root, "music")

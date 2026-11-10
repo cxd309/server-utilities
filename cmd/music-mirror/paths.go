@@ -5,7 +5,8 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
-	"strings"
+
+	"github.com/cxd309/server-utilities/internal/pathutil"
 )
 
 var (
@@ -13,19 +14,6 @@ var (
 	errDestInSrc = errors.New("mirror is inside the library, it would scan itself")
 	errSrcInDest = errors.New("library is inside the mirror, prine could delete library")
 )
-
-// within reports whether path is parent itself or somewhere beneath it.
-// Both should be absolute.
-func within(parent, path string) (inside bool) {
-	rel, err := filepath.Rel(parent, path)
-	if err != nil {
-		return false
-	}
-	if rel == "." {
-		return true
-	}
-	return rel != ".." && !strings.HasPrefix(rel, ".."+string(filepath.Separator))
-}
 
 // checkPaths makes src and dest absolute and rejects layouts where the
 // library and the mirror overlap.
@@ -41,9 +29,9 @@ func checkPaths(rawSrc, rawDest string) (src, dest string, err error) {
 	}
 
 	switch {
-	case within(src, dest):
+	case pathutil.Within(src, dest):
 		return "", "", errDestInSrc
-	case within(dest, src):
+	case pathutil.Within(dest, src):
 		return "", "", errSrcInDest
 	}
 	return src, dest, nil

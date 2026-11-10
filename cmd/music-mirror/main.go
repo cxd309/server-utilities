@@ -10,6 +10,8 @@ import (
 	"path/filepath"
 	"runtime"
 	"syscall"
+
+	"github.com/cxd309/server-utilities/internal/pathutil"
 )
 
 type options struct {
@@ -22,9 +24,14 @@ type options struct {
 }
 
 func main() {
+	home, err := os.UserHomeDir()
+	if err != nil {
+		fatalf("finding home folder: %v", err)
+	}
+
 	var o options
-	flag.StringVar(&o.src, "src", "/mnt/prudence/music", "source library root")
-	flag.StringVar(&o.dest, "dest", "/mnt/prudence/music-mirror", "mirror root")
+	flag.StringVar(&o.src, "src", "/Volumes/music", "source library root (mounted share)")
+	flag.StringVar(&o.dest, "dest", filepath.Join(home, "Music", "Music"), "mirror root")
 	flag.StringVar(&o.bitrate, "bitrate", "320k", "MP3 bitrate passed to ffmpeg")
 	flag.BoolVar(&o.prune, "prune", true, "delete mirror files where source has been removed")
 	flag.BoolVar(&o.dryRun, "dry-run", false, "show what would happen, change nothing")
@@ -113,7 +120,7 @@ func main() {
 // rel shortens a path for display, relative to the source or mirror root.
 func (o options) rel(path string) (short string) {
 	for _, root := range []string{o.dest, o.src} {
-		if r, err := filepath.Rel(root, path); err == nil && within(root, path) {
+		if r, err := filepath.Rel(root, path); err == nil && pathutil.Within(root, path) {
 			return r
 		}
 	}

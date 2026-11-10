@@ -7,9 +7,7 @@ require (
 	github.com/go-flac/flacvorbis v0.2.0
 	github.com/go-flac/go-flac v1.0.0
 	github.com/stretchr/testify v1.12.1
+	golang.org/x/text v0.3.8
 )
 
-require (
-	go.yaml.in/yaml/v3 v3.0.5 // indirect
-	golang.org/x/text v0.3.8 // indirect
-)
+require go.yaml.in/yaml/v3 v3.0.5 // indirect
