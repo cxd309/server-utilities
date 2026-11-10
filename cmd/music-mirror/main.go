@@ -31,7 +31,7 @@ func main() {
 
 	var o options
 	flag.StringVar(&o.src, "src", "/Volumes/music", "source library root (mounted share)")
-	flag.StringVar(&o.dest, "dest", filepath.Join(home, "Music", "Music"), "mirror root")
+	flag.StringVar(&o.dest, "dest", filepath.Join(home, "Music", "music-mirror"), "mirror root")
 	flag.StringVar(&o.bitrate, "bitrate", "320k", "MP3 bitrate passed to ffmpeg")
 	flag.BoolVar(&o.prune, "prune", true, "delete mirror files where source has been removed")
 	flag.BoolVar(&o.dryRun, "dry-run", false, "show what would happen, change nothing")
