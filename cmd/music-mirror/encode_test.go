@@ -59,3 +59,11 @@ func TestEncodeFailure(t *testing.T) {
 	require.ErrorAs(t, err, &fe)
 	assert.Contains(t, fe.Stderr, "missing.flac")
 }
+
+// makeTone writes a short untagged FLAC into dir and returns its path.
+func makeTone(t *testing.T, dir string) (path string) {
+	t.Helper()
+	path = filepath.Join(dir, "tone.flac")
+	makeFLAC(t, path)
+	return path
+}
