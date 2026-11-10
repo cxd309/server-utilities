@@ -26,18 +26,42 @@ func main() {
 	flag.IntVar(&o.jobs, "jobs", runtime.NumCPU(), "number of parallel encodes")
 	flag.Parse()
 
+	src, dest, err := checkPaths(o.src, o.dest)
+	if err != nil {
+		fatalf("%v (--src %s, --dest %s)", err, o.src, o.dest)
+	}
+	o.src, o.dest = src, dest
+
 	jobs, err := scan(o.src, o.dest)
 	if err != nil {
-		fmt.Fprintln(os.Stderr, "error:", err)
-		os.Exit(1)
+		fatalf("%v", err)
 	}
 	if len(jobs) == 0 {
-		fmt.Fprintf(os.Stderr, "error: no audio files found in %s\n", o.src)
-		os.Exit(1)
+		fatalf("no audio files found in %s", o.src)
 	}
 
+	var todo []job
 	for _, j := range jobs {
-		fmt.Printf("%-6s %s\n", j.kind, j.dst)
+		done, err := upToDate(j)
+		if err != nil {
+			fatalf("%v", err)
+		}
+		if !done {
+			todo = append(todo, j)
+		}
 	}
-	fmt.Printf("%d tracks\n", len(jobs))
+	fmt.Printf("%d tracks, %d to update\n", len(jobs), len(todo))
+
+	if o.dryRun {
+		for _, j := range todo {
+			fmt.Printf("%-6s %s\n", j.kind, j.dst)
+		}
+		return
+	}
+	fatalf("encoding not implemented yet, use --dry-run")
+}
+
+func fatalf(format string, args ...any) {
+	fmt.Fprintf(os.Stderr, "error: "+format+"\n", args...)
+	os.Exit(1)
 }

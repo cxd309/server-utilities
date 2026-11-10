@@ -4,6 +4,7 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -43,4 +44,27 @@ func TestScanCollision(t *testing.T) {
 	require.NoError(t, err)
 	require.Len(t, jobs, 1)
 	assert.Equal(t, kindEncode, jobs[0].kind) // a.flac sorts first and wins
+}
+
+func TestUpToDate(t *testing.T) {
+	dir := t.TempDir()
+	touch(t, dir, "src.flac")
+	j := job{src: filepath.Join(dir, "src.flac"), dst: filepath.Join(dir, "dst.mp3")}
+
+	done, err := upToDate(j)
+	require.NoError(t, err)
+	assert.False(t, done, "dst missing")
+
+	touch(t, dir, "dst.mp3")
+	past := time.Now().Add(-time.Hour)
+	require.NoError(t, os.Chtimes(j.src, past, past))
+	done, err = upToDate(j)
+	require.NoError(t, err)
+	assert.True(t, done, "dst newer than src")
+
+	future := time.Now().Add(time.Hour)
+	require.NoError(t, os.Chtimes(j.src, future, future))
+	done, err = upToDate(j)
+	require.NoError(t, err)
+	assert.False(t, done, "src changed after dst was made")
 }

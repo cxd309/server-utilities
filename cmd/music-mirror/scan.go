@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"io/fs"
 	"os"
@@ -82,4 +83,19 @@ func scan(src, dest string) (jobs []job, err error) {
 		return nil, fmt.Errorf("scanning %s: %w", src, err)
 	}
 	return jobs, nil
+}
+
+// upToDate reports whether j.dst exists and is at least as new as j.src,
+// meaning an earlier run already produced it
+func upToDate(j job) (done bool, err error) {
+	var dstInfo, srcInfo fs.FileInfo
+	if dstInfo, err = os.Stat(j.dst); errors.Is(err, fs.ErrNotExist) {
+		return false, nil
+	} else if err != nil {
+		return false, err
+	}
+	if srcInfo, err = os.Stat(j.src); err != nil {
+		return false, err
+	}
+	return !dstInfo.ModTime().Before(srcInfo.ModTime()), nil
 }
