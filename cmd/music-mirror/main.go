@@ -32,6 +32,10 @@ func main() {
 	}
 	o.src, o.dest = src, dest
 
+	if err = checkFFmpeg(); err != nil {
+		fatalf("%v", err)
+	}
+
 	jobs, err := scan(o.src, o.dest)
 	if err != nil {
 		fatalf("%v", err)
