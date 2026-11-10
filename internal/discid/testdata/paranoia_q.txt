@@ -1,0 +1,27 @@
+cdparanoia III release 10.2 libcdio 2.2.0 x86_64-pc-linux-gnu
+(C) 2001 Monty <monty@xiph.org> and Xiphophorus
+(C) 2004, 2005, 2008 Rocky Bernstein <rocky@gnu.org>
+(C) 2014 Robert Kausch <robert.kausch@freac.org>
+
+Report bugs to bug-libcdio@gnu.org
+
+
+Table of contents (audio tracks only):
+track        length               begin        copy pre ch
+===========================================================
+  1.    13962 [03:06.12]        0 [00:00.00]    no   no  2
+  2.    10895 [02:25.20]    13962 [03:06.12]    no   no  2
+  3.    16395 [03:38.45]    24857 [05:31.32]    no   no  2
+  4.    13303 [02:57.28]    41252 [09:10.02]    no   no  2
+  5.    14867 [03:18.17]    54555 [12:07.30]    no   no  2
+  6.    17763 [03:56.63]    69422 [15:25.47]    no   no  2
+  7.    11610 [02:34.60]    87185 [19:22.35]    no   no  2
+  8.    13957 [03:06.07]    98795 [21:57.20]    no   no  2
+  9.    19000 [04:13.25]   112752 [25:03.27]    no   no  2
+ 10.    12153 [02:42.03]   131752 [29:16.52]    no   no  2
+ 11.    13930 [03:05.55]   143905 [31:58.55]    no   no  2
+ 12.    18915 [04:12.15]   157835 [35:04.35]    no   no  2
+ 13.    12360 [02:44.60]   176750 [39:16.50]    no   no  2
+ 14.    14082 [03:07.57]   189110 [42:01.35]    no   no  2
+TOTAL  203192 [45:09.17]    (audio only)
+ 
