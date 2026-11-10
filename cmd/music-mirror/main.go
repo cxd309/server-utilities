@@ -1,10 +1,15 @@
 package main
 
 import (
+	"context"
+	"errors"
 	"flag"
 	"fmt"
 	"os"
+	"os/signal"
+	"path/filepath"
 	"runtime"
+	"syscall"
 )
 
 type options struct {
@@ -25,6 +30,10 @@ func main() {
 	flag.BoolVar(&o.dryRun, "dry-run", false, "show what would happen, change nothing")
 	flag.IntVar(&o.jobs, "jobs", runtime.NumCPU(), "number of parallel encodes")
 	flag.Parse()
+
+	if o.jobs < 1 {
+		o.jobs = 1
+	}
 
 	src, dest, err := checkPaths(o.src, o.dest)
 	if err != nil {
@@ -56,13 +65,59 @@ func main() {
 	}
 	fmt.Printf("%d tracks, %d to update\n", len(jobs), len(todo))
 
+	// Ctrl-C or a service stop cancels ctx:
+	// no new jobs start, running encodes are killed, and finished tracks are kept.
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer stop()
+
+	failed := 0
 	if o.dryRun {
 		for _, j := range todo {
-			fmt.Printf("%-6s %s\n", j.kind, j.dst)
+			fmt.Printf("%-6s %s\n", j.kind, o.rel(j.dst))
 		}
-		return
+	} else {
+		done := 0
+		runJobs(ctx, todo, o.jobs, o.bitrate, func(j job, err error) {
+			done++
+			switch {
+			case errors.Is(err, context.Canceled):
+				// interrupted, reported once below
+			case err != nil:
+				failed++
+				fmt.Fprintf(os.Stderr, "[%d/%d] FAILED %s: %v\n", done, len(todo), o.rel(j.src), err)
+			default:
+				fmt.Printf("[%d/%d] %-6s %s\n", done, len(todo), j.kind, o.rel(j.dst))
+			}
+		})
 	}
-	fatalf("encoding not implemented yet, use --dry-run")
+
+	if ctx.Err() != nil {
+		fatalf("interrupted: finished tracks are kept, the rest will be done next run")
+	}
+
+	if o.prune {
+		removed, err := prune(o.dest, jobs, o.dryRun)
+		for _, p := range removed {
+			fmt.Printf("prune  %s\n", o.rel(p))
+		}
+		if err != nil {
+			fatalf("pruning: %v", err)
+		}
+	}
+
+	if failed > 0 {
+		fatalf("%d track(s) failed, see above", failed)
+	}
+}
+
+// rel shortens a path for display, relative to the source or mirror root.
+func (o options) rel(path string) (short string) {
+	for _, root := range []string{o.dest, o.src} {
+		if r, err := filepath.Rel(root, path); err == nil && within(root, path) {
+			return r
+		}
+	}
+	return path
 }
 
 func fatalf(format string, args ...any) {
