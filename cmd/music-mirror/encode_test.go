@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/cxd309/server-utilities/internal/ffmpeg"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -55,7 +56,7 @@ func TestEncodeFailure(t *testing.T) {
 
 	err := encode(context.Background(), filepath.Join(dir, "missing.flac"), filepath.Join(dir, "x.part"), "320k")
 
-	var fe *ffmpegError
+	var fe *ffmpeg.Error
 	require.ErrorAs(t, err, &fe)
 	assert.Contains(t, fe.Stderr, "missing.flac")
 }

@@ -4,36 +4,21 @@ import (
 	"bytes"
 	"context"
 	"errors"
-	"fmt"
 	"os/exec"
-	"strings"
+
+	"github.com/cxd309/server-utilities/internal/ffmpeg"
 )
 
 var (
-	errNoFFmpeg = errors.New("ffmpeg not found on PATH (sudo apt install ffmpeg)")
-	errNoLame   = errors.New("ffmpeg was built without the libmp3lame encoder")
+	errNoLame = errors.New("ffmpeg was built without the libmp3lame encoder")
 )
-
-// ffmpegError is returned when ffmpeg exits non-zero.
-// Stderr holds ffmpeg's own explanation, which is usually the useful part
-type ffmpegError struct {
-	Src    string
-	Stderr string
-	Err    error
-}
-
-func (e *ffmpegError) Error() string {
-	return fmt.Sprintf("ffmpeg failed on %s: %v: %s", e.Src, e.Err, e.Stderr)
-}
-
-func (e *ffmpegError) Unwrap() error { return e.Err }
 
 // checkFFmpeg confirms ffmpeg is installed and can encode mp3
 func checkFFmpeg() (err error) {
 	var out []byte
 	if out, err = exec.Command("ffmpeg", "-hide_banner", "-encoders").Output(); err != nil {
 		if errors.Is(err, exec.ErrNotFound) {
-			return errNoFFmpeg
+			return ffmpeg.ErrNotInstalled
 		}
 		return err
 	}
@@ -43,14 +28,10 @@ func checkFFmpeg() (err error) {
 	return nil
 }
 
-// ffmpeg builds the command line that turns one FLAC into an untagged CBR mp3.
-// Tags are written seperately afterwards
+// ffmpegArgs builds the command line that turns one FLAC into an untagged CBR mp3.
+// Tags are written separately afterwards
 func ffmpegArgs(src, out, bitrate string) (args []string) {
 	return []string{
-		"-nostdin", // never wait for keyboard input
-		"-hide_banner",
-		"-loglevel", "error", // only print problems
-		"-y", // overwrite out if a previous run left one
 		"-i", src,
 		"-map", "0:a:0", // first audio stream only, which drops embedded cover art
 		"-map_metadata", "-1", // copy no tags across
@@ -66,11 +47,5 @@ func ffmpegArgs(src, out, bitrate string) (args []string) {
 
 // encode converts src to an untagged mp3 at out
 func encode(ctx context.Context, src, out, bitrate string) (err error) {
-	var stderr strings.Builder
-	cmd := exec.CommandContext(ctx, "ffmpeg", ffmpegArgs(src, out, bitrate)...)
-	cmd.Stderr = &stderr
-	if err = cmd.Run(); err != nil {
-		return &ffmpegError{Src: src, Stderr: strings.TrimSpace(stderr.String()), Err: err}
-	}
-	return nil
+	return ffmpeg.Run(ctx, ffmpegArgs(src, out, bitrate)...)
 }
