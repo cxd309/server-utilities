@@ -30,7 +30,7 @@ func TestScan(t *testing.T) {
 	require.NoError(t, err)
 
 	assert.Equal(t, []job{
-		{src: filepath.Join(src, "Artist/Album/01 Song.flac"), dst: "/dest/Artist/Album/01 Song.mp3", kind: kindEncode},
+		{src: filepath.Join(src, "Artist/Album/01 Song.flac"), dst: "/dest/Artist/Album/01 Song.m4a", kind: kindEncode},
 		{src: filepath.Join(src, "Artist/Album/02 Song.MP3"), dst: "/dest/Artist/Album/02 Song.mp3", kind: kindCopy},
 	}, jobs)
 }

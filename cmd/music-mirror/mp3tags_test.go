@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"path/filepath"
 	"testing"
 
@@ -46,7 +45,7 @@ func writeV24(t *testing.T, path string) {
 func makeMP3(t *testing.T, dir string) (path string) {
 	t.Helper()
 	path = filepath.Join(dir, "song.mp3")
-	require.NoError(t, encode(context.Background(), makeTone(t, dir), path, "128k"))
+	makePlainMP3(t, path)
 	writeV24(t, path)
 	return path
 }
@@ -72,7 +71,7 @@ func TestReadMP3Untagged(t *testing.T) {
 	requireFFmpeg(t)
 	dir := t.TempDir()
 	src := filepath.Join(dir, "plain.mp3")
-	require.NoError(t, encode(context.Background(), makeTone(t, dir), src, "128k"))
+	makePlainMP3(t, src)
 
 	got, err := readMP3(src)
 	require.NoError(t, err)

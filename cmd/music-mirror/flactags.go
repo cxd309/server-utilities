@@ -80,20 +80,20 @@ func (v vorbisComments) numberPair(numField string, totalFields ...string) (pair
 }
 
 func fromVorbis(v vorbisComments) (tags trackTags) {
+	// Browse by the primary artist only,
+	// anyone else credited moves into the title, e.g. "Song (feat. Rihanna)".
+	artist, guests := splitCredit(v.get("ARTIST"), v["ARTISTS"])
+
 	return trackTags{
-		Title:           v.get("TITLE"),
-		Artist:          v.get("ARTIST"),
-		Album:           v.get("ALBUM"),
-		AlbumArtist:     v.get("ALBUMARTIST", "ALBUM ARTIST"),
-		Genre:           v.get("GENRE"),
-		Composer:        v.get("COMPOSER"),
-		ArtistSort:      v.get("ARTISTSORT"),
-		AlbumArtistSort: v.get("ALBUMARTISTSORT"),
-		AlbumSort:       v.get("ALBUMSORT"),
-		TitleSort:       v.get("TITLESORT"),
-		Year:            yearOf(v.get("ORIGINALDATE"), v.get("DATE"), v.get("YEAR")),
-		Track:           v.numberPair("TRACKNUMBER", "TRACKTOTAL", "TOTALTRACKS"),
-		Disc:            v.numberPair("DISCNUMBER", "DISCTOTAL", "TOTALDISCS"),
-		Compilation:     v.get("COMPILATION") == "1",
+		Title:       titleWithGuests(v.get("TITLE"), guests),
+		Artist:      artist,
+		Album:       v.get("ALBUM"),
+		AlbumArtist: v.get("ALBUMARTIST", "ALBUM ARTIST"),
+		Genre:       v.get("GENRE"),
+		Composer:    v.get("COMPOSER"),
+		Year:        yearOf(v.get("ORIGINALDATE"), v.get("DATE"), v.get("YEAR")),
+		Track:       v.numberPair("TRACKNUMBER", "TRACKTOTAL", "TOTALTRACKS"),
+		Disc:        v.numberPair("DISCNUMBER", "DISCTOTAL", "TOTALDISCS"),
+		Compilation: v.get("COMPILATION") == "1",
 	}
 }

@@ -27,6 +27,17 @@ func (k kind) String() string {
 	return "unknown"
 }
 
+// ext is the extension of the mirror file a job of this kind produces
+func (k kind) ext() (ext string) {
+	switch k {
+	case kindEncode:
+		return ".m4a"
+	case kindCopy:
+		return ".mp3"
+	}
+	return ""
+}
+
 // job is one source file and where it ends up in the mirror
 type job struct {
 	src  string
@@ -43,7 +54,7 @@ var kindByExt = map[string]kind{
 // Folder structure is reproduced under dest, with the extension changed to .mp3.
 // Hidden files and folders are skipped
 func scan(src, dest string) (jobs []job, err error) {
-	seen := make(map[string]string) // dst -> src, to catch collisions
+	seen := make(map[string]string) // dst without extension -> src, to catch collisions
 
 	err = filepath.WalkDir(src, func(path string, d fs.DirEntry, err error) error {
 		if err != nil {
@@ -69,13 +80,16 @@ func scan(src, dest string) (jobs []job, err error) {
 		if err != nil {
 			return err
 		}
-		dst := filepath.Join(dest, strings.TrimSuffix(rel, ext)+".mp3")
+		// Compare without the extension: song.flac and song.mp3 in the same
+		// folder would become song.m4a and song.mp3, the same track twice.
+		stem := filepath.Join(dest, strings.TrimSuffix(rel, ext))
+		dst := stem + k.ext()
 
-		if prev, dup := seen[dst]; dup {
-			fmt.Fprintf(os.Stderr, "warning: %s and %s both map to %s, skipping the second\n", prev, path, dst)
+		if prev, dup := seen[stem]; dup {
+			fmt.Fprintf(os.Stderr, "warning: %s and %s are the same track, skipping the second\n", prev, path)
 			return nil
 		}
-		seen[dst] = path
+		seen[stem] = path
 		jobs = append(jobs, job{src: path, dst: dst, kind: k})
 		return nil
 	})

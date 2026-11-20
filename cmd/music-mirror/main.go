@@ -17,7 +17,6 @@ import (
 type options struct {
 	src     string
 	dest    string
-	bitrate string
 	prune   bool
 	dryRun  bool
 	jobs    int
@@ -32,7 +31,6 @@ func main() {
 	var o options
 	flag.StringVar(&o.src, "src", "/Volumes/music", "source library root (mounted share)")
 	flag.StringVar(&o.dest, "dest", filepath.Join(home, "Music", "music-mirror"), "mirror root")
-	flag.StringVar(&o.bitrate, "bitrate", "320k", "MP3 bitrate passed to ffmpeg")
 	flag.BoolVar(&o.prune, "prune", true, "delete mirror files where source has been removed")
 	flag.BoolVar(&o.dryRun, "dry-run", false, "show what would happen, change nothing")
 	flag.IntVar(&o.jobs, "jobs", runtime.NumCPU(), "number of parallel encodes")
@@ -84,7 +82,7 @@ func main() {
 		}
 	} else {
 		done := 0
-		runJobs(ctx, todo, o.jobs, o.bitrate, func(j job, err error) {
+		runJobs(ctx, todo, o.jobs, func(j job, err error) {
 			done++
 			switch {
 			case errors.Is(err, context.Canceled):

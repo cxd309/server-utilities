@@ -15,7 +15,7 @@ var errUnknownKind = errors.New("unknown job kind")
 // All work happens in a .part file beside the destination,
 // which is renamed into place only once complete,
 // so an interupted run never leaves a half-written mp3 that looks finished.
-func process(ctx context.Context, j job, bitrate string) (err error) {
+func process(ctx context.Context, j job) (err error) {
 	if err = os.MkdirAll(filepath.Dir(j.dst), 0o755); err != nil {
 		return err
 	}
@@ -36,7 +36,7 @@ func process(ctx context.Context, j job, bitrate string) (err error) {
 		if tags, err = readFLAC(j.src); err != nil {
 			return err
 		}
-		if err = encode(ctx, j.src, part, bitrate); err != nil {
+		if err = encode(ctx, j.src, part, tags); err != nil {
 			return err
 		}
 	case kindCopy:
@@ -46,12 +46,11 @@ func process(ctx context.Context, j job, bitrate string) (err error) {
 		if err = copyFile(j.src, part); err != nil {
 			return err
 		}
+		if err = writeID3(part, tags); err != nil {
+			return err
+		}
 	default:
 		return errUnknownKind
-	}
-
-	if err = writeID3(part, tags); err != nil {
-		return err
 	}
 	return os.Rename(part, j.dst)
 }
@@ -81,7 +80,7 @@ func copyFile(src, dst string) (err error) {
 // runJobs processes jobs using a given number of workers, calling onDone after each one.
 // onDone is never called concurrently, so it doesn't need its own locking.
 // Cancelling ctx stops new jobs starting and kills any running encodes.
-func runJobs(ctx context.Context, jobs []job, workers int, bitrate string, onDone func(j job, err error)) {
+func runJobs(ctx context.Context, jobs []job, workers int, onDone func(j job, err error)) {
 	queue := make(chan job)
 	var wg sync.WaitGroup
 	var mu sync.Mutex
@@ -89,7 +88,7 @@ func runJobs(ctx context.Context, jobs []job, workers int, bitrate string, onDon
 	for range workers {
 		wg.Go(func() {
 			for j := range queue {
-				err := process(ctx, j, bitrate)
+				err := process(ctx, j)
 				mu.Lock()
 				onDone(j, err)
 				mu.Unlock()

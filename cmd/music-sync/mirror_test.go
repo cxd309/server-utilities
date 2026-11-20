@@ -23,6 +23,9 @@ func TestListMirror(t *testing.T) {
 	touch(t, dir, "A/Album/01.mp3")
 	touch(t, dir, "A/Album/02.MP3")
 	touch(t, dir, "A/Album/03.mp3.part") // interrupted encode
+	touch(t, dir, "A/Album/04.m4a")
+	touch(t, dir, "A/Album/05.m4a.part")
+	touch(t, dir, "A/Album/cover.jpg")
 	touch(t, dir, ".music-sync")
 	touch(t, dir, ".Trash/x.mp3")
 
@@ -37,6 +40,7 @@ func TestListMirror(t *testing.T) {
 	assert.Equal(t, []string{
 		filepath.Join(dir, "A/Album/01.mp3"),
 		filepath.Join(dir, "A/Album/02.MP3"),
+		filepath.Join(dir, "A/Album/04.m4a"),
 	}, paths)
 }
 

@@ -13,8 +13,11 @@ import (
 // It's hidden, so music-mirror's scan and prune ignore it.
 const stateFile = ".music-sync"
 
-// listMirror returns every MP3 under dir,
-// skipping hidden files and folders (and so music-mirror's .part files, which don't end in .mp3).
+// trackExts are the files music-mirror produces: ALAC from FLAC, MP3 copied as-is.
+var trackExts = map[string]bool{".m4a": true, ".mp3": true}
+
+// listMirror returns every track (.m4a or .mp3) under dir, skipping hidden
+// files and folders. music-mirror's .part files don't match trackExts either.
 func listMirror(dir string) (files []mirrorFile, err error) {
 	err = filepath.WalkDir(dir, func(path string, d fs.DirEntry, walkErr error) error {
 		if walkErr != nil {
@@ -26,7 +29,7 @@ func listMirror(dir string) (files []mirrorFile, err error) {
 			}
 			return nil
 		}
-		if d.IsDir() || strings.ToLower(filepath.Ext(path)) != ".mp3" {
+		if d.IsDir() || !trackExts[strings.ToLower(filepath.Ext(path))] {
 			return nil
 		}
 		info, infoErr := d.Info()

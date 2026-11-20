@@ -45,3 +45,35 @@ func isDigits(s string) (ok bool) {
 	}
 	return s != ""
 }
+
+// splitCredit separates an artist credit into its primary artist and the rest,
+// using the credited artists Picard stores in ARTISTS.
+// So "Calvin Harris feat. Rihanna" with ["Calvin Harris", "Rihanna"]
+// gives "Calvin Harris" and "feat. Rihanna".
+// A credit with one artist is returned whole, one that doesn't start with its first artist loses the rest.
+func splitCredit(credit string, artists []string) (primary, rest string) {
+	if len(artists) < 2 {
+		return credit, ""
+	}
+	primary = artists[0]
+	if !strings.HasPrefix(credit, primary) {
+		return primary, ""
+	}
+	return primary, strings.TrimSpace(strings.TrimPrefix(credit, primary))
+}
+
+// titleWithGuests appends the rest of a credit to the title, Apple style:
+// "feat. Rihanna" gives "Title (feat. Rihanna)", and any other join
+// ("& David Bowie", "x Stormzy", ", B & C") gives "Title (with …)".
+// Titles that already name a featured artist are left alone.
+func titleWithGuests(title, rest string) (full string) {
+	join, guests, ok := strings.Cut(rest, " ")
+	if !ok || guests == "" || strings.Contains(strings.ToLower(title), "feat.") {
+		return title
+	}
+	switch strings.ToLower(join) {
+	case "feat.", "ft.", "featuring":
+		return title + " (feat. " + guests + ")"
+	}
+	return title + " (with " + guests + ")"
+}

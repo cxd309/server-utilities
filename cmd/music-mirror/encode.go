@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bytes"
 	"context"
 	"errors"
 	"os/exec"
@@ -9,43 +8,58 @@ import (
 	"github.com/cxd309/server-utilities/internal/ffmpeg"
 )
 
-var (
-	errNoLame = errors.New("ffmpeg was built without the libmp3lame encoder")
-)
-
-// checkFFmpeg confirms ffmpeg is installed and can encode mp3
+// checkFFmpeg confirms ffmpeg is installed. The ALAC encoder is built into
+// every ffmpeg, so unlike MP3 there's no optional library to check for.
 func checkFFmpeg() (err error) {
-	var out []byte
-	if out, err = exec.Command("ffmpeg", "-hide_banner", "-encoders").Output(); err != nil {
-		if errors.Is(err, exec.ErrNotFound) {
-			return ffmpeg.ErrNotInstalled
-		}
-		return err
+	if _, err = exec.LookPath("ffmpeg"); errors.Is(err, exec.ErrNotFound) {
+		return ffmpeg.ErrNotInstalled
 	}
-	if !bytes.Contains(out, []byte("libmp3lame")) {
-		return errNoLame
-	}
-	return nil
+	return err
 }
 
-// ffmpegArgs builds the command line that turns one FLAC into an untagged CBR mp3.
-// Tags are written separately afterwards
-func ffmpegArgs(src, out, bitrate string) (args []string) {
-	return []string{
+// metadataArgs turns tags into ffmpeg -metadata options. The ipod muxer
+// maps these names onto iTunes atoms (track -> trkn, compilation -> cpil, ...).
+func metadataArgs(tags trackTags) (args []string) {
+	add := func(key, value string) {
+		if value != "" {
+			args = append(args, "-metadata", key+"="+value)
+		}
+	}
+	add("title", tags.Title)
+	add("artist", tags.Artist)
+	add("album", tags.Album)
+	add("album_artist", tags.AlbumArtist)
+	add("genre", tags.Genre)
+	add("composer", tags.Composer)
+	add("date", tags.Year)
+	add("track", tags.Track)
+	add("disc", tags.Disc)
+	if tags.Compilation {
+		add("compilation", "1")
+	}
+	return args
+}
+
+// ffmpegArgs builds the command line that turns one FLAC into a tagged ALAC .m4a
+func ffmpegArgs(src, out string, tags trackTags) (args []string) {
+	args = []string{
 		"-i", src,
 		"-map", "0:a:0", // first audio stream only, which drops embedded cover art
-		"-map_metadata", "-1", // copy no tags across
-		"-c:a", "libmp3lame",
-		"-b:a", bitrate,
-		"-compression_level", "2", // LAME -q 2: high quality at a sensible speed
-		"-id3v2_version", "0", // write no ID3 tag of our own...
-		"-write_id3v1", "0", // ...or an old-style v1 one
-		"-f", "mp3", // out will end in .part, so name the format explicitly
-		out,
+		"-map_metadata", "-1", // copy no tags across; we write our own below
+		// Older iPods only play ALAC up to 16-bit/48 kHz, so bring anything
+		// bigger down to CD quality. A no-op for files that already are;
+		// dither only kicks in when reducing bit depth.
+		"-af", "aresample=osr=44100:osf=s16p:dither_method=triangular",
+		"-c:a", "alac",
 	}
+	args = append(args, metadataArgs(tags)...)
+	return append(args,
+		"-f", "ipod", // out will end in .part, so name the format explicitly
+		out,
+	)
 }
 
-// encode converts src to an untagged mp3 at out
-func encode(ctx context.Context, src, out, bitrate string) (err error) {
-	return ffmpeg.Run(ctx, ffmpegArgs(src, out, bitrate)...)
+// encode converts src to a tagged ALAC file at out
+func encode(ctx context.Context, src, out string, tags trackTags) (err error) {
+	return ffmpeg.Run(ctx, ffmpegArgs(src, out, tags)...)
 }

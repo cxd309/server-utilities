@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"os"
 	"path/filepath"
 	"testing"
@@ -40,7 +39,7 @@ func TestWriteID3RoundTrip(t *testing.T) {
 	requireFFmpeg(t)
 	dir := t.TempDir()
 	mp3 := filepath.Join(dir, "song.mp3")
-	require.NoError(t, encode(context.Background(), makeTone(t, dir), mp3, "128k"))
+	makePlainMP3(t, mp3)
 
 	want := trackTags{
 		Title: "Feel So Different", Artist: "Sinéad O’Connor", Album: "I Do Not Want What I Haven’t Got",
@@ -56,34 +55,25 @@ func TestWriteID3RoundTrip(t *testing.T) {
 	assert.Equal(t, want, got, "every field should survive write then read")
 }
 
-func TestFLACToTaggedMP3(t *testing.T) {
+func TestReadMP3PrimaryArtist(t *testing.T) {
 	requireFFmpeg(t)
 	dir := t.TempDir()
-	src := filepath.Join(dir, "song.flac")
-	mp3 := filepath.Join(dir, "song.mp3.part")
-	makeFLAC(t, src,
-		"TITLE=Café Song",
-		"ARTIST=The Band",
-		"ALBUMARTIST=Various Artists",
-		"DATE=2012-09-10",
-		"ORIGINALDATE=1968-10-16",
-		"TRACKNUMBER=3", "TRACKTOTAL=12",
-		"COMPILATION=1",
-	)
+	mp3 := filepath.Join(dir, "song.mp3")
+	makePlainMP3(t, mp3)
 
-	tags, err := readFLAC(src)
+	tag, err := id3v2.Open(mp3, id3v2.Options{Parse: false})
 	require.NoError(t, err)
-	require.NoError(t, encode(context.Background(), src, mp3, "320k"))
-	require.NoError(t, writeID3(mp3, tags))
+	tag.SetVersion(4)
+	tag.AddTextFrame("TIT2", id3v2.EncodingUTF8, "We Are Young")
+	tag.AddTextFrame("TPE1", id3v2.EncodingUTF8, "Fun feat. Janelle Monáe")
+	tag.AddUserDefinedTextFrame(id3v2.UserDefinedTextFrame{
+		Encoding: id3v2.EncodingUTF8, Description: "ARTISTS", Value: "Fun\x00Janelle Monáe",
+	})
+	require.NoError(t, tag.Save())
+	require.NoError(t, tag.Close())
 
 	got, err := readMP3(mp3)
 	require.NoError(t, err)
-	assert.Equal(t, trackTags{
-		Title:       "Café Song",
-		Artist:      "The Band",
-		AlbumArtist: "Various Artists",
-		Year:        "1968",
-		Track:       "3/12",
-		Compilation: true,
-	}, got)
+	assert.Equal(t, "Fun", got.Artist)
+	assert.Equal(t, "We Are Young (feat. Janelle Monáe)", got.Title)
 }

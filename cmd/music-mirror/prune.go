@@ -58,7 +58,7 @@ func prune(dest string, jobs []job, dryRun bool) (removed []string, err error) {
 // a finished mp3, or a temporary file from an interrupted run.
 func isOurs(path string) (ours bool) {
 	name := strings.ToLower(filepath.Base(path))
-	for _, suffix := range []string{".mp3", ".mp3.part", ".mp3.part-id3v2"} {
+	for _, suffix := range []string{".m4a", ".m4a.part", ".mp3", ".mp3.part", ".mp3.part-id3v2"} {
 		if strings.HasSuffix(name, suffix) {
 			return true
 		}

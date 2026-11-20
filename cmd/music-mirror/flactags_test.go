@@ -53,6 +53,17 @@ func TestFromVorbis(t *testing.T) {
 	}, got)
 }
 
+func TestFromVorbisPrimaryArtist(t *testing.T) {
+	v := vorbisComments{
+		"TITLE":   {"This Is What You Came For"},
+		"ARTIST":  {"Calvin Harris feat. Rihanna"},
+		"ARTISTS": {"Calvin Harris", "Rihanna"},
+	}
+	tags := fromVorbis(v)
+	assert.Equal(t, "Calvin Harris", tags.Artist)
+	assert.Equal(t, "This Is What You Came For (feat. Rihanna)", tags.Title)
+}
+
 func TestReadFLAC(t *testing.T) {
 	requireFFmpeg(t)
 	src := filepath.Join(t.TempDir(), "song.flac")
