@@ -16,16 +16,12 @@ func buildDir(dst string) (dir string) {
 	return dir
 }
 
-// buildBook plans a downloaded book into parts of at most limit frames,
+// buildBook plans a book into parts with planBook,
 // builds them all in the hidden build folder, then swaps that folder into place at b.dst.
 // It returns how many parts it wrote
 func buildBook(ctx context.Context, b book, d download, limit int64) (parts int, err error) {
-	frames := make([]int64, len(d.chapters))
-	for i, c := range d.chapters {
-		frames[i] = c.frames
-	}
 	var plan [][]piece
-	if plan, err = planParts(frames, limit); err != nil {
+	if plan, err = planBook(d.chapters, limit); err != nil {
 		return 0, err
 	}
 
@@ -42,10 +38,16 @@ func buildBook(ctx context.Context, b book, d download, limit int64) (parts int,
 		}
 	}()
 
+	sections := make([]string, len(plan))
+	for i, part := range plan {
+		sections[i] = d.chapters[part[0].chapter].section // planBook never mixes sections in a part
+	}
+	titles := partTitles(d.tags.title, sections)
+
 	for i, part := range plan {
 		n := i + 1
 		out := filepath.Join(tmp, fmt.Sprintf("Part %02d.m4b", n))
-		tags := tagLines(d.tags, n, len(plan))
+		tags := tagLines(d.tags, titles[i], n, len(plan))
 		if err = joinPart(ctx, part, d.chapters, d.sampleRate, tags, d.cover, out); err != nil {
 			return 0, err
 		}

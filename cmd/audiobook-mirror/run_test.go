@@ -39,13 +39,13 @@ func TestRun(t *testing.T) {
 	assert.Equal(t, []string{
 		"warning: Pratchett/stray.m4a is not in an Author/Title folder, skipping",
 		"An Author/Test Book: built 1 part(s)",
-		"Pratchett/Mort: skipped, no chapter .m4a files (CD books aren't supported yet)",
+		"Pratchett/Mort: skipped, no chapter files",
 	}, runOnce(o), "first run")
 	assert.FileExists(t, filepath.Join(o.dest, "An Author", "Test Book", "Part 01.m4b"))
 
 	assert.Equal(t, []string{
 		"warning: Pratchett/stray.m4a is not in an Author/Title folder, skipping",
-		"Pratchett/Mort: skipped, no chapter .m4a files (CD books aren't supported yet)",
+		"Pratchett/Mort: skipped, no chapter files",
 	}, runOnce(o), "second run has nothing to build")
 
 	require.NoError(t, os.RemoveAll(bookDir))

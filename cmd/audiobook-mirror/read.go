@@ -10,15 +10,16 @@ import (
 	"github.com/cxd309/server-utilities/internal/ffmpeg"
 )
 
-// listChapters returns the chapter files of a downloaded book, in name order.
-// m4b-split names them "001 Title.m4a", so name order is chapter order
+// listChapters returns the chapter files of a book, in name order.
+// m4b-split names them "001 Title.m4a" and Picard names CD tracks "1-01 Title.flac",
+// so name order is chapter order
 func listChapters(dir string) (paths []string, err error) {
 	var entries []os.DirEntry
 	if entries, err = os.ReadDir(dir); err != nil {
 		return nil, err
 	}
 	for _, e := range entries {
-		if e.IsDir() || hidden(e.Name()) || strings.ToLower(filepath.Ext(e.Name())) != ".m4a" {
+		if e.IsDir() || hidden(e.Name()) || !isAudio(e.Name()) {
 			continue
 		}
 		paths = append(paths, filepath.Join(dir, e.Name()))
@@ -49,10 +50,13 @@ func chapterFromInfo(path string, info ffmpeg.Info) (c chapterFile, sampleRate i
 		return chapterFile{}, 0, &probeFieldError{Field: "duration", Err: err}
 	}
 
+	tags := lowerKeys(info.Format.Tags)
 	c = chapterFile{
-		path:   path,
-		title:  strings.TrimSpace(info.Format.Tags["title"]),
-		frames: framesFor(seconds, sampleRate),
+		path:    path,
+		title:   strings.TrimSpace(tags["title"]),
+		frames:  framesFor(seconds, sampleRate),
+		codec:   audio.CodecName,
+		section: meaningfulSection(tags["discsubtitle"]),
 	}
 	if c.title == "" {
 		c.title = strings.TrimSuffix(filepath.Base(path), filepath.Ext(path))
@@ -60,18 +64,46 @@ func chapterFromInfo(path string, info ffmpeg.Info) (c chapterFile, sampleRate i
 	return c, sampleRate, nil
 }
 
+// lowerKeys returns a copy of tags with every key in lower case.
+// ffprobe reports m4a tags as "album" but FLAC tags as "ALBUM"
+func lowerKeys(tags map[string]string) (lower map[string]string) {
+	lower = make(map[string]string, len(tags))
+	for k, v := range tags {
+		lower[strings.ToLower(k)] = v
+	}
+	return lower
+}
+
+// listItem returns entry i of a Picard multi-value tag such as "Terry Pratchett;Tony Robinson",
+// or "" when there are not that many entries
+func listItem(list string, i int) (item string) {
+	items := strings.Split(list, ";")
+	if i < len(items) {
+		item = strings.TrimSpace(items[i])
+	}
+	return item
+}
+
 // tagsFromInfo reads the book's tags from ffprobe's report on one of its files.
-// Picard writes the same album tags on every file, so any file will do
+// Picard writes the same album tags on every file, so any file will do.
+// The author is the first of albumartists, as in the Picard folder names, and
+// the narrator is the composer, or failing that the second of albumartists
 func tagsFromInfo(info ffmpeg.Info) (tags bookTags) {
-	t := info.Format.Tags
+	t := lowerKeys(info.Format.Tags)
 	tags = bookTags{
 		title:    strings.TrimSpace(t["album"]),
-		author:   strings.TrimSpace(t["album_artist"]),
+		author:   listItem(t["albumartists"], 0),
 		narrator: strings.TrimSpace(t["composer"]),
 		date:     strings.TrimSpace(t["date"]),
 	}
 	if tags.author == "" {
+		tags.author = strings.TrimSpace(t["album_artist"])
+	}
+	if tags.author == "" {
 		tags.author = strings.TrimSpace(t["artist"])
+	}
+	if tags.narrator == "" {
+		tags.narrator = listItem(t["albumartists"], 1)
 	}
 	return tags
 }
@@ -105,6 +137,11 @@ func readDownload(ctx context.Context, dir string) (d download, err error) {
 		if c, rate, err = chapterFromInfo(path, info); err != nil {
 			return download{}, err
 		}
+		var stat os.FileInfo
+		if stat, err = os.Stat(path); err != nil {
+			return download{}, err
+		}
+		c.bytes = stat.Size()
 		if i == 0 {
 			d.sampleRate = rate
 			d.tags = tagsFromInfo(info)

@@ -15,11 +15,11 @@ import (
 )
 
 type options struct {
-	src     string
-	dest    string
-	prune   bool
-	dryRun  bool
-	jobs    int
+	src    string
+	dest   string
+	prune  bool
+	dryRun bool
+	jobs   int
 }
 
 func main() {

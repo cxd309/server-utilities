@@ -81,16 +81,115 @@ func TestPlanPartsBadLimit(t *testing.T) {
 
 func TestPartLimit(t *testing.T) {
 	tests := []struct {
-		name       string
-		sampleRate int
-		want       int64
+		name          string
+		sampleRate    int
+		bytesPerFrame float64
+		want          int64
 	}{
-		{"44.1 kHz: 79 minutes", 44100, 204_134},
-		{"22 kHz: 79 minutes", 22050, 102_067},
+		// 13.5 h × 44100 / 1024 = 2,093,027 frames; 2³¹ samples would allow 2,097,151
+		{"44.1 kHz, time limit wins", 44100, 0, 2_093_027},
+		// 13.5 h at 22.05 kHz is 1,046,513 frames, well inside 2³¹ samples
+		{"22 kHz, time limit wins", 22050, 0, 1_046_513},
+		// at 48 kHz 13.5 h is 2,278,125 frames, so the 32-bit sample limit wins
+		{"48 kHz, sample limit wins", 48000, 0, 2_097_151},
+		// ALAC at ~2,000 bytes per frame: 800 MB / 2000 = 400,000 frames, about 2.6 h
+		{"ALAC, size limit wins", 44100, 2000, 400_000},
+		// Audible AAC at ~364 bytes per frame: 800 MB allows ~2.2M frames, more than time
+		{"AAC, size below time", 44100, 364, 2_093_027},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			assert.Equal(t, tt.want, partLimit(tt.sampleRate))
+			assert.Equal(t, tt.want, partLimit(tt.sampleRate, tt.bytesPerFrame))
+		})
+	}
+}
+
+func TestPlanBook(t *testing.T) {
+	tests := []struct {
+		name     string
+		chapters []chapterFile
+		want     [][]piece
+	}{
+		{
+			"no sections: packed by the limit",
+			[]chapterFile{{frames: 30}, {frames: 30}, {frames: 10}},
+			[][]piece{{{0, 0, 30}}, {{1, 0, 30}, {2, 0, 10}}},
+		},
+		{
+			"sections never share a part, even when they'd fit",
+			[]chapterFile{{frames: 10, section: "1984"}, {frames: 10, section: "1984"}, {frames: 10, section: "Animal Farm"}},
+			[][]piece{{{0, 0, 10}, {1, 0, 10}}, {{2, 0, 10}}},
+		},
+		{
+			"a long section still splits by the limit",
+			[]chapterFile{{frames: 10, section: "Essays"}, {frames: 40, section: "Poetry"}, {frames: 40, section: "Poetry"}},
+			[][]piece{{{0, 0, 10}}, {{1, 0, 40}}, {{2, 0, 40}}},
+		},
+		{
+			"unnamed chapters around a section each form their own run",
+			[]chapterFile{{frames: 10}, {frames: 10, section: "Appendix"}, {frames: 10}},
+			[][]piece{{{0, 0, 10}}, {{1, 0, 10}}, {{2, 0, 10}}},
+		},
+		{"no chapters", nil, nil},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			parts, err := planBook(tt.chapters, 50)
+			require.NoError(t, err)
+			assert.Equal(t, tt.want, parts)
+		})
+	}
+}
+
+func TestMeaningfulSection(t *testing.T) {
+	tests := []struct {
+		name, want string
+	}{
+		{"Animal Farm", "Animal Farm"},
+		{"  1984 ", "1984"}, // a number, but too long to be a disc count
+		{"The Annals of the Kings and Rulers", "The Annals of the Kings and Rulers"},
+		{"Civil", "Civil"},
+		{"Discworld", "Discworld"},
+		{"Part One", "Part One"}, // words aren't caught: kept, and harmless
+		{"", ""},
+		{"Disc 1", ""},
+		{"disc 2 of 3", ""},
+		{"CD2", ""},
+		{"Disk 3/4", ""},
+		{"Part II", ""},
+		{"Vol. 2", ""},
+		{"Volume 1", ""},
+		{"Side A", ""},
+		{"3", ""},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			assert.Equal(t, tt.want, meaningfulSection(tt.name))
+		})
+	}
+}
+
+func TestOutputBytesPerFrame(t *testing.T) {
+	tests := []struct {
+		name string
+		d    download
+		want float64
+	}{
+		{"copied AAC keeps its size", download{sampleRate: 44100, chapters: []chapterFile{
+			{codec: "aac", frames: 600, bytes: 200_000},
+			{codec: "aac", frames: 400, bytes: 164_000},
+		}}, 364},
+		{"FLAC to ALAC is a bit bigger", download{sampleRate: 44100, chapters: []chapterFile{
+			{codec: "flac", frames: 1000, bytes: 2_000_000},
+		}}, 2200},
+		{"22 kHz AAC to ALAC counts as PCM", download{sampleRate: 22050, chapters: []chapterFile{
+			{codec: "aac", frames: 1000, bytes: 180_000},
+		}}, 4096},
+		{"no chapters is unknown", download{sampleRate: 44100}, 0},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			assert.InDelta(t, tt.want, outputBytesPerFrame(tt.d), 0.001)
 		})
 	}
 }

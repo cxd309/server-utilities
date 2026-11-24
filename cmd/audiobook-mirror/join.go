@@ -12,9 +12,12 @@ import (
 
 // chapterFile is one chapter file of a downloaded book
 type chapterFile struct {
-	path   string
-	title  string
-	frames int64
+	path    string
+	title   string
+	frames  int64
+	codec   string // ffprobe's codec name, such as "aac" or "flac"
+	section string // the medium's name, e.g. "Animal Farm"; "" for none (see meaningfulSection)
+	bytes   int64  // file size, for estimating how big parts will be
 }
 
 // frameTime is the time where frame starts, as ffmpeg seconds with six decimals.
@@ -136,7 +139,8 @@ func joinPart(ctx context.Context, part []piece, chapters []chapterFile, sampleR
 	listPath := filepath.Join(dir, "list.txt")
 	metaPath := filepath.Join(dir, "meta.txt")
 	meta := ";FFMETADATA1\n" + tags + chapterMeta(part, chapters, sampleRate)
-	copyAudio := canCopy(sampleRate)
+	// A book never mixes codecs, so the part's first chapter speaks for the rest
+	copyAudio := canCopy(chapters[part[0].chapter].codec, sampleRate)
 	preroll := !copyAudio && part[0].start > 0 // only a part's first piece can start mid-chapter
 	if err = os.WriteFile(listPath, []byte(concatList(part, chapters, sampleRate, preroll)), 0o600); err != nil {
 		return err
@@ -147,9 +151,10 @@ func joinPart(ctx context.Context, part []piece, chapters []chapterFile, sampleR
 	return ffmpeg.Run(ctx, joinArgs(listPath, metaPath, cover, out, copyAudio, preroll)...)
 }
 
-// canCopy reports whether a book's AAC can go into its parts unchanged.
+// canCopy reports whether a book's audio can go into its parts unchanged.
 // The iPod mini plays Audible's 44.1 kHz AAC cleanly but scratches on 22 kHz AAC,
-// so anything other than 44.1 kHz is converted to ALAC instead
-func canCopy(sampleRate int) (yes bool) {
-	return sampleRate == 44100
+// and can't play FLAC at all, so anything other than 44.1 kHz AAC is converted to ALAC instead
+func canCopy(codec string, sampleRate int) (yes bool) {
+	yes = codec == "aac" && sampleRate == 44100
+	return yes
 }

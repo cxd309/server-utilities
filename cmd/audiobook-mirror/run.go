@@ -70,7 +70,7 @@ func buildOne(ctx context.Context, b book, dryRun bool) (action string, err erro
 		return "", err
 	}
 	if len(paths) == 0 {
-		return "skipped, no chapter .m4a files (CD books aren't supported yet)", nil
+		return "skipped, no chapter files", nil
 	}
 	if dryRun {
 		return "would build", nil
@@ -81,7 +81,7 @@ func buildOne(ctx context.Context, b book, dryRun bool) (action string, err erro
 		return "", err
 	}
 	var parts int
-	if parts, err = buildBook(ctx, b, d, partLimit(d.sampleRate)); err != nil {
+	if parts, err = buildBook(ctx, b, d, partLimit(d.sampleRate, outputBytesPerFrame(d))); err != nil {
 		return "", err
 	}
 	return fmt.Sprintf("built %d part(s)", parts), nil

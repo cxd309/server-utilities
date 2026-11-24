@@ -23,6 +23,7 @@ func TestListChapters(t *testing.T) {
 		".001 One.m4a.part",
 		"._001 One.m4a",
 		"Extras/003 Three.m4a",
+		"1-01 Track.flac",
 	} {
 		touch(t, dir, rel)
 	}
@@ -32,11 +33,12 @@ func TestListChapters(t *testing.T) {
 	assert.Equal(t, []string{
 		filepath.Join(dir, "001 One.M4A"),
 		filepath.Join(dir, "002 Two.m4a"),
+		filepath.Join(dir, "1-01 Track.flac"),
 	}, paths)
 }
 
 func TestChapterFromInfo(t *testing.T) {
-	audio := ffmpeg.Stream{CodecType: "audio", SampleRate: "44100"}
+	audio := ffmpeg.Stream{CodecType: "audio", CodecName: "aac", SampleRate: "44100"}
 	cover := ffmpeg.Stream{CodecType: "video"}
 
 	tests := []struct {
@@ -51,17 +53,26 @@ func TestChapterFromInfo(t *testing.T) {
 				Format:  ffmpeg.Format{Duration: "7200.000000", Tags: map[string]string{"title": " Chapter 1 "}},
 				Streams: []ffmpeg.Stream{cover, audio},
 			},
-			chapterFile{path: "/b/001 x.m4a", title: "Chapter 1", frames: 310_079},
+			chapterFile{path: "/b/001 x.m4a", title: "Chapter 1", frames: 310_079, codec: "aac"},
 			44100,
 		},
 		{
 			"no title tag",
 			ffmpeg.Info{
 				Format:  ffmpeg.Format{Duration: "1.0"},
-				Streams: []ffmpeg.Stream{{CodecType: "audio", SampleRate: "22050"}},
+				Streams: []ffmpeg.Stream{{CodecType: "audio", CodecName: "flac", SampleRate: "22050"}},
 			},
-			chapterFile{path: "/b/001 x.m4a", title: "001 x", frames: 22},
+			chapterFile{path: "/b/001 x.m4a", title: "001 x", frames: 22, codec: "flac"},
 			22050,
+		},
+		{
+			"named medium",
+			ffmpeg.Info{
+				Format:  ffmpeg.Format{Duration: "1.0", Tags: map[string]string{"TITLE": "Chapter 1", "disc": "2/11", "DISCSUBTITLE": "Animal Farm"}},
+				Streams: []ffmpeg.Stream{{CodecType: "audio", CodecName: "flac", SampleRate: "44100"}},
+			},
+			chapterFile{path: "/b/001 x.m4a", title: "Chapter 1", frames: 44, codec: "flac", section: "Animal Farm"},
+			44100,
 		},
 	}
 	for _, tt := range tests {
@@ -88,6 +99,25 @@ func TestChapterFromInfoErrors(t *testing.T) {
 	assert.ErrorIs(t, err, strconv.ErrSyntax)
 }
 
+func TestListItem(t *testing.T) {
+	tests := []struct {
+		name string
+		list string
+		i    int
+		want string
+	}{
+		{"first", "Terry Pratchett;Tony Robinson", 0, "Terry Pratchett"},
+		{"second", "Terry Pratchett; Tony Robinson", 1, "Tony Robinson"},
+		{"past the end", "Terry Pratchett", 1, ""},
+		{"empty", "", 0, ""},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			assert.Equal(t, tt.want, listItem(tt.list, tt.i))
+		})
+	}
+}
+
 func TestTagsFromInfo(t *testing.T) {
 	tests := []struct {
 		name string
@@ -109,6 +139,16 @@ func TestTagsFromInfo(t *testing.T) {
 			"no album artist",
 			map[string]string{"album": "Thud!", "artist": "Terry Pratchett"},
 			bookTags{title: "Thud!", author: "Terry Pratchett"},
+		},
+		{
+			"CD rip with upper case keys",
+			map[string]string{
+				"ALBUM":        "Eric",
+				"ALBUMARTISTS": "Terry Pratchett;Tony Robinson",
+				"album_artist": "Terry Pratchett read by Tony Robinson",
+				"DATE":         "2006",
+			},
+			bookTags{title: "Eric", author: "Terry Pratchett", narrator: "Tony Robinson", date: "2006"},
 		},
 		{"no tags", nil, bookTags{}},
 	}

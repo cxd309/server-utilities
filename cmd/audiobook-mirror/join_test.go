@@ -135,9 +135,22 @@ func TestJoinArgs(t *testing.T) {
 }
 
 func TestCanCopy(t *testing.T) {
-	assert.True(t, canCopy(44100))
-	assert.False(t, canCopy(22050))
-	assert.False(t, canCopy(48000))
+	tests := []struct {
+		name       string
+		codec      string
+		sampleRate int
+		want       bool
+	}{
+		{name: "AAC at 44.1 kHz is copied", codec: "aac", sampleRate: 44100, want: true},
+		{name: "AAC at 22.05 kHz is re-encoded", codec: "aac", sampleRate: 22050, want: false},
+		{name: "AAC at 48 kHz is re-encoded", codec: "aac", sampleRate: 48000, want: false},
+		{name: "FLAC at 44.1 kHz is re-encoded", codec: "flac", sampleRate: 44100, want: false},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			assert.Equal(t, tt.want, canCopy(tt.codec, tt.sampleRate))
+		})
+	}
 }
 
 // countSamples asks ffprobe how many samples the file's audio stream holds.
@@ -194,13 +207,13 @@ func TestJoinPart(t *testing.T) {
 			var chapters []chapterFile
 			for i, title := range []string{"One", "Can't Two"} {
 				path := filepath.Join(dir, "ch"+strconv.Itoa(i)+".m4a")
-				chapters = append(chapters, chapterFile{path: path, title: title, frames: countFrames(t, path)})
+				chapters = append(chapters, chapterFile{path: path, title: title, frames: countFrames(t, path), codec: "aac"})
 			}
 
 			cover := filepath.Join(dir, "cover.jpg")
 			require.NoError(t, ffmpeg.Run(ctx,
 				"-f", "lavfi", "-i", "color=c=red:s=64x64", "-frames:v", "1", cover))
-			tags := tagLines(bookTags{title: "Test Book", author: "An Author"}, 1, 2)
+			tags := tagLines(bookTags{title: "Test Book", author: "An Author"}, "Test Book, Part 1 of 2", 1, 2)
 
 			// All of chapter 0, then the first 10 frames of chapter 1
 			out := filepath.Join(dir, "Part 01.m4b")

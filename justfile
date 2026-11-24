@@ -10,10 +10,20 @@ test:
 
 # vet
 vet:
-    go vet ./...
+    
+# format Go code and everything dprint covers
+fmt:
+    gofmt -w .
+    dprint fmt
 
-# vet and test
-check: vet test
+# check formatting and vet, without changing anything
+lint:
+    go vet ./...
+    test -z "$(gofmt -l .)"
+    dprint check
+
+# lint and test
+check: lint test
 
 # build every tool into dist/
 build:
