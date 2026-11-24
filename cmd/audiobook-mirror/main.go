@@ -19,14 +19,11 @@ import (
 )
 
 func main() {
-	home, err := os.UserHomeDir()
-	if err != nil {
-		fatalf("finding home folder: %v", err)
-	}
+	var err error
 
 	var o options
-	flag.StringVar(&o.src, "src", "/Volumes/audiobooks", "library root, holding Author/Title folders")
-	flag.StringVar(&o.dest, "dest", filepath.Join(home, "audiobooks", "mirror"), "mirror root")
+	flag.StringVar(&o.src, "src", "/mnt/prudence/audiobooks", "library root, holding Author/Title folders")
+	flag.StringVar(&o.dest, "dest", "/mnt/dolly/mirror/audiobooks", "mirror root")
 	flag.BoolVar(&o.prune, "prune", true, "delete mirrored books that are no longer in the library")
 	flag.BoolVar(&o.dryRun, "dry-run", false, "show what would happen, change nothing")
 	flag.Parse()

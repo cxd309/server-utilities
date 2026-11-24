@@ -23,14 +23,9 @@ type options struct {
 }
 
 func main() {
-	home, err := os.UserHomeDir()
-	if err != nil {
-		fatalf("finding home folder: %v", err)
-	}
-
 	var o options
-	flag.StringVar(&o.src, "src", "/Volumes/music", "source library root (mounted share)")
-	flag.StringVar(&o.dest, "dest", filepath.Join(home, "Music", "music-mirror"), "mirror root")
+	flag.StringVar(&o.src, "src", "/mnt/prudence/music", "source library root")
+	flag.StringVar(&o.dest, "dest", "/mnt/dolly/mirror/music", "mirror root")
 	flag.BoolVar(&o.prune, "prune", true, "delete mirror files where source has been removed")
 	flag.BoolVar(&o.dryRun, "dry-run", false, "show what would happen, change nothing")
 	flag.IntVar(&o.jobs, "jobs", runtime.NumCPU(), "number of parallel encodes")
