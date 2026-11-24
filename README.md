@@ -25,3 +25,8 @@ To use one, open Picard's file naming script editor (Options → File Naming) an
 After changing a script in Picard, **Export** it over the file here and commit,
 then re-save the affected albums so their files move.
 The destination directory is a separate Picard setting; each script notes the one it expects.
+
+## One-off jobs
+
+`one-off/` holds scripts for unusual releases, run once by hand and kept as worked examples.
+See `one-off/README.md`.

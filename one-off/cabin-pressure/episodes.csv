@@ -1,0 +1,29 @@
+episode,title,release_date,first_broadcast,series,series_episode,description,bbc_pid
+1,Abu Dhabi,2008-07-02T11:30:00+01:00,2008-07-02T11:30:00+01:00,Series 1,1,"Series 1, episode 1 of 6. First broadcast 2 July 2008 on BBC Radio 4.",b00cb5k4
+2,Boston,2008-07-09T11:30:00+01:00,2008-07-09T11:30:00+01:00,Series 1,2,"Series 1, episode 2 of 6. First broadcast 9 July 2008 on BBC Radio 4.",b00cdsj8
+3,Cremona,2008-07-16T11:30:00+01:00,2008-07-16T11:30:00+01:00,Series 1,3,"Series 1, episode 3 of 6. First broadcast 16 July 2008 on BBC Radio 4.",b00chy5c
+4,Douz,2008-07-23T11:30:00+01:00,2008-07-23T11:30:00+01:00,Series 1,4,"Series 1, episode 4 of 6. First broadcast 23 July 2008 on BBC Radio 4.",b00cm9p6
+5,Edinburgh,2008-07-30T11:30:00+01:00,2008-07-30T11:30:00+01:00,Series 1,5,"Series 1, episode 5 of 6. First broadcast 30 July 2008 on BBC Radio 4.",b00cqhr3
+6,Fitton,2008-08-06T11:30:00+01:00,2008-08-06T11:30:00+01:00,Series 1,6,"Series 1, episode 6 of 6. First broadcast 6 August 2008 on BBC Radio 4.",b00ctl6w
+7,Gdansk,2009-07-17T11:30:00+01:00,2009-07-24T11:30:00+01:00,Series 2,2,"Series 2, episode 2 of 6. First broadcast 24 July 2009 on BBC Radio 4.",b00lq8lk
+8,Helsinki,2009-07-24T11:30:00+01:00,2009-07-17T11:30:00+01:00,Series 2,1,"Series 2, episode 1 of 6. First broadcast 17 July 2009 on BBC Radio 4.",b00lmcyc
+9,Ipswich,2009-07-31T11:30:00+01:00,2009-07-31T11:30:00+01:00,Series 2,3,"Series 2, episode 3 of 6. First broadcast 31 July 2009 on BBC Radio 4.",b00lt16c
+10,Johannesburg,2009-08-07T11:30:00+01:00,2009-08-07T11:30:00+01:00,Series 2,4,"Series 2, episode 4 of 6. First broadcast 7 August 2009 on BBC Radio 4.",b00lxh3r
+11,Kuala Lumpur,2009-08-14T11:30:00+01:00,2009-08-14T11:30:00+01:00,Series 2,5,"Series 2, episode 5 of 6. First broadcast 14 August 2009 on BBC Radio 4.",b00lyvz7
+12,Limerick,2009-08-21T11:30:00+01:00,2009-08-21T11:30:00+01:00,Series 2,6,"Series 2, episode 6 of 6. First broadcast 21 August 2009 on BBC Radio 4.",b00m4472
+13,Molokai (Cabin Pressure at Christmas),2010-12-25T08:30:00Z,2010-12-25T08:30:00Z,Christmas special,,Christmas special. First broadcast 25 December 2010 on BBC Radio 4.,b00wqj4v
+14,Newcastle,2011-07-01T11:30:00+01:00,2011-07-15T11:30:00+01:00,Series 3,3,"Series 3, episode 3 of 6. First broadcast 15 July 2011 on BBC Radio 4.",b012ftrs
+15,Ottery St Mary,2011-07-08T11:30:00+01:00,2011-07-22T11:30:00+01:00,Series 3,4,"Series 3, episode 4 of 6. First broadcast 22 July 2011 on BBC Radio 4.",b012llrz
+16,Paris,2011-07-15T11:30:00+01:00,2011-07-08T11:30:00+01:00,Series 3,2,"Series 3, episode 2 of 6. First broadcast 8 July 2011 on BBC Radio 4.",b01293c9
+17,Qikiqtarjuaq,2011-07-22T11:30:00+01:00,2011-07-01T11:30:00+01:00,Series 3,1,"Series 3, episode 1 of 6. First broadcast 1 July 2011 on BBC Radio 4.",b0124qtf
+18,Rotterdam,2011-07-29T11:30:00+01:00,2011-07-29T11:30:00+01:00,Series 3,5,"Series 3, episode 5 of 6. First broadcast 29 July 2011 on BBC Radio 4.",b012r99d
+19,St Petersburg,2011-08-05T11:30:00+01:00,2011-08-05T11:30:00+01:00,Series 3,6,"Series 3, episode 6 of 6. First broadcast 5 August 2011 on BBC Radio 4.",b012x12f
+20,Timbuktu,2013-01-09T18:30:00Z,2013-01-09T18:30:00Z,Series 4,1,"Series 4, episode 1 of 6. First broadcast 9 January 2013 on BBC Radio 4.",b01l02j9
+21,Uskerty,2013-01-16T18:30:00Z,2013-01-16T18:30:00Z,Series 4,2,"Series 4, episode 2 of 6. First broadcast 16 January 2013 on BBC Radio 4.",b01ptztf
+22,Vaduz,2013-01-23T18:30:00Z,2013-01-23T18:30:00Z,Series 4,3,"Series 4, episode 3 of 6. First broadcast 23 January 2013 on BBC Radio 4.",b01pzv5r
+23,Wokingham,2013-01-30T18:30:00Z,2013-01-30T18:30:00Z,Series 4,4,"Series 4, episode 4 of 6. First broadcast 30 January 2013 on BBC Radio 4.",b01q8qqc
+24,Xinzhou,2013-02-06T18:30:00Z,2013-02-06T18:30:00Z,Series 4,5,"Series 4, episode 5 of 6. First broadcast 6 February 2013 on BBC Radio 4.",b01qdzc4
+25,Yverdon-Les-Bains,2013-02-13T18:30:00Z,2013-02-13T18:30:00Z,Series 4,6,"Series 4, episode 6 of 6. First broadcast 13 February 2013 on BBC Radio 4.",b01qjc6k
+26,"Zurich, Part 1",2014-12-23T18:30:00Z,2014-12-23T18:30:00Z,Series 5,1,"Series 5, episode 1 of 2. First broadcast 23 December 2014 on BBC Radio 4.",b04vf25d
+27,"Zurich, Part 2",2014-12-24T18:30:00Z,2014-12-24T18:30:00Z,Series 5,2,"Series 5, episode 2 of 2. First broadcast 24 December 2014 on BBC Radio 4.",b04vf959
+28,Interview with John Finnemore,2015-02-05T00:00:00Z,,,,From the box set The Complete Cabin Pressure: From A to Z (2015).,
