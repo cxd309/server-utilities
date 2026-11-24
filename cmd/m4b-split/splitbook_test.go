@@ -83,3 +83,15 @@ func TestSplitBookCancelled(t *testing.T) {
 	assert.ErrorIs(t, err, context.Canceled)
 	assert.Empty(t, names(t, filepath.Dir(out)))
 }
+
+func TestSplitBookPieceCountMismatch(t *testing.T) {
+	requireFFmpeg(t)
+	src, b, out := testBook(t)
+	// The file is 3 s long, so cuts at 10 s and 20 s make no extra pieces
+	b.chapters = []chapter{{start: 0, title: "A"}, {start: 10, title: "B"}, {start: 20, title: "C"}}
+
+	err := splitBook(context.Background(), src, out, b)
+
+	assert.ErrorIs(t, err, errPieceCount)
+	assert.Empty(t, names(t, filepath.Dir(out)), "nothing renamed into place")
+}

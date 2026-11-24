@@ -35,6 +35,9 @@ func segmentArgs(src, dir string, chapters []chapter) (args []string) {
 	}
 	if len(times) > 0 {
 		args = append(args, "-segment_times", strings.Join(times, ","))
+	} else {
+		// One chapter: no cuts. Given no rule at all, the segment muxer cuts every 2 s
+		args = append(args, "-segment_time", "1000000000")
 	}
 
 	return append(args, filepath.Join(dir, pieceName))

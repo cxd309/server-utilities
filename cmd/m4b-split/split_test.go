@@ -53,6 +53,7 @@ func TestSegmentArgs(t *testing.T) {
 func TestSegmentArgsOneChapter(t *testing.T) {
 	args := segmentArgs("in.m4b", "/tmp/out", []chapter{{start: 0}})
 	assert.NotContains(t, args, "-segment_times")
+	assert.Contains(t, strings.Join(args, " "), "-segment_time 1000000000", "no rule would mean a cut every 2 s")
 }
 
 func TestSplitAudio(t *testing.T) {
@@ -80,9 +81,17 @@ func TestSplitAudioOneChapter(t *testing.T) {
 	requireFFmpeg(t)
 	dir := t.TempDir()
 	src := filepath.Join(dir, "book.m4b")
-	chapters := makeBook(t, src, "Only")
+	// 5 s, longer than the segment muxer's 2 s default, which a 1 s book would hide
+	require.NoError(t, ffmpeg.Run(context.Background(),
+		"-f", "lavfi", "-i", "sine=duration=5:sample_rate=44100", "-c:a", "aac", "-f", "ipod", src))
+	chapters := []chapter{{start: 0, end: 5, title: "Only"}}
 
 	require.NoError(t, splitAudio(context.Background(), src, dir, chapters))
-	assert.FileExists(t, filepath.Join(dir, "0000.m4a"))
-	assert.NoFileExists(t, filepath.Join(dir, "0001.m4a"))
+
+	assert.NoFileExists(t, filepath.Join(dir, "0001.m4a"), "one chapter, one piece")
+	info, err := ffmpeg.Probe(context.Background(), filepath.Join(dir, "0000.m4a"))
+	require.NoError(t, err)
+	d, err := strconv.ParseFloat(info.Format.Duration, 64)
+	require.NoError(t, err)
+	assert.InDelta(t, 5.0, d, 0.05, "the whole book")
 }

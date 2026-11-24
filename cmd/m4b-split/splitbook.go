@@ -33,6 +33,14 @@ func splitBook(ctx context.Context, src, dir string, b book) (err error) {
 	if err = splitAudio(ctx, src, work, b.chapters); err != nil {
 		return err
 	}
+	// A miscount must never be renamed into place looking finished
+	var pieces []string
+	if pieces, err = filepath.Glob(filepath.Join(work, "*.m4a")); err != nil {
+		return err
+	}
+	if len(pieces) != len(b.chapters) {
+		return fmt.Errorf("%d pieces for %d chapters: %w", len(pieces), len(b.chapters), errPieceCount)
+	}
 	for n := 1; n <= len(b.chapters); n++ {
 		if err = tagPiece(ctx, work, b, n); err != nil {
 			return fmt.Errorf("chapter %d: %w", n, err)

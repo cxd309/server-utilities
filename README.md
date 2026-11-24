@@ -14,9 +14,9 @@ Both libraries are tagged with [MusicBrainz Picard](https://picard.musicbrainz.o
 Its file naming scripts decide the folder layout the tools above expect,
 so they're kept here, in `picard/`, and changed in git like any other code.
 
-| Script | Layout |
-|---|---|
-| `picard/music.ptsp` | `Album artist/Album/[disc-]NN Title`, into `/mnt/prudence/music` |
+| Script                   | Layout                                                                            |
+| ------------------------ | --------------------------------------------------------------------------------- |
+| `picard/music.ptsp`      | `Album artist/Album/[disc-]NN Title`, into `/mnt/prudence/music`                  |
 | `picard/audiobooks.ptsp` | `Author/Book (Narrator)/[disc-]NN Chapter title`, into `/mnt/prudence/audiobooks` |
 
 They're Picard's own script export format: plain text, with the script in an indented block.
