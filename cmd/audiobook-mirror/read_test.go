@@ -193,6 +193,30 @@ func TestReadDownload(t *testing.T) {
 		assert.Equal(t, "Two", d.chapters[1].title)
 	})
 
+	t.Run("no cover.jpg: the first chapter's embedded picture", func(t *testing.T) {
+		dir := t.TempDir()
+		jpg := filepath.Join(t.TempDir(), "art.jpg")
+		require.NoError(t, ffmpeg.Run(ctx, "-f", "lavfi", "-i", "color=c=red:s=100x100", "-frames:v", "1", jpg))
+		require.NoError(t, ffmpeg.Run(ctx,
+			"-f", "lavfi", "-i", "sine=duration=1:sample_rate=44100", "-i", jpg,
+			"-map", "0", "-map", "1", "-c:a", "aac", "-c:v", "copy", "-disposition:v", "attached_pic",
+			"-f", "ipod", filepath.Join(dir, "001 One.m4a")))
+		makeChapter(t, dir, "002 Two.m4a", 1, 44100, "Two")
+
+		d, err := readDownload(ctx, dir)
+		require.NoError(t, err)
+		assert.Equal(t, filepath.Join(dir, "001 One.m4a"), d.cover)
+	})
+
+	t.Run("no cover at all", func(t *testing.T) {
+		dir := t.TempDir()
+		makeChapter(t, dir, "001 One.m4a", 1, 44100, "One")
+
+		d, err := readDownload(ctx, dir)
+		require.NoError(t, err)
+		assert.Empty(t, d.cover)
+	})
+
 	t.Run("no chapters", func(t *testing.T) {
 		dir := t.TempDir()
 		touch(t, dir, "cover.jpg")

@@ -118,7 +118,7 @@ func TestJoinArgs(t *testing.T) {
 				"-i", "/tmp/x/meta.txt",
 				"-i", "/b/cover.jpg",
 				"-map", "0:a:0",
-				"-map", "2:v", "-disposition:v", "attached_pic",
+				"-map", "2:v:0", "-disposition:v", "attached_pic",
 				"-af", "atrim=start_sample=1024,asetpts=PTS-STARTPTS",
 				"-map_metadata", "1", "-map_chapters", "1",
 				"-c:a", "alac", "-sample_fmt", "s16p", "-c:v", "copy",

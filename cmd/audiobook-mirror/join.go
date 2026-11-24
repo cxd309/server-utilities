@@ -105,7 +105,7 @@ func joinArgs(listPath, metaPath, cover, out string, copyAudio, preroll bool) (a
 
 	args = append(args, "-map", "0:a:0")
 	if cover != "" {
-		args = append(args, "-map", "2:v", "-disposition:v", "attached_pic")
+		args = append(args, "-map", "2:v:0", "-disposition:v", "attached_pic") // one picture, even from a chapter file
 	}
 
 	if preroll {

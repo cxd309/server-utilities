@@ -127,6 +127,7 @@ func readDownload(ctx context.Context, dir string) (d download, err error) {
 		return download{}, errNoChapters
 	}
 
+	var firstHasPicture bool
 	for i, path := range paths {
 		var info ffmpeg.Info
 		var c chapterFile
@@ -145,14 +146,29 @@ func readDownload(ctx context.Context, dir string) (d download, err error) {
 		if i == 0 {
 			d.sampleRate = rate
 			d.tags = tagsFromInfo(info)
+			firstHasPicture = hasPicture(info)
 		} else if rate != d.sampleRate {
 			return download{}, &sampleRateError{Path: path, Want: d.sampleRate, Got: rate}
 		}
 		d.chapters = append(d.chapters, c)
 	}
 
-	d.cover = findCover(dir)
+	// Picard embeds the cover in every file but may not save a cover.jpg.
+	// ffmpeg can take the picture straight from a chapter file, so that will do as the source
+	if d.cover = findCover(dir); d.cover == "" && firstHasPicture {
+		d.cover = paths[0]
+	}
 	return d, nil
+}
+
+// hasPicture reports whether ffprobe found an embedded picture, which it lists as a video stream
+func hasPicture(info ffmpeg.Info) (yes bool) {
+	for _, s := range info.Streams {
+		if s.CodecType == "video" {
+			return true
+		}
+	}
+	return false
 }
 
 // findCover returns the path of dir/cover.jpg, or "" if there isn't one
