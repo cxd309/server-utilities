@@ -1,0 +1,28 @@
+title: Audiobooks
+description: |
+  Audiobook library: Author/Book (Narrator)/[disc-]NN Chapter title.
+  The narrator comes from the album artist credit ("read by X"), else the second
+  credited artist, else "Audio Drama". Destination directory /mnt/prudence/audiobooks.
+  Kept in github.com/cxd309/server-utilities (picard/).
+author: Chris Davis
+license: MIT
+version: '1.0'
+last_updated: 2026-11-24 04:16:00 UTC
+script_language_version: '1.0'
+script: |
+  $noop(Destination directory: /mnt/prudence/audiobooks)
+  $noop(Audiobooks: Author/Book [Narrator]/[disc-]NN Chapter title)
+  $noop(The narrator comes from the album: the "read by" part of the credit, else the
+        second credited artist, else "Audio Drama" for dramatisations. Every track of a
+        book shares these, so a book never splits across folders)
+  $set(_author,$if2($getmulti(%_albumartists%,0),%albumartist%,%artist%))
+  $set(_narrator,$rsearch(%albumartist%,\(?:read|narrated|performed\) by \(.+\)\$))
+  $set(_narrator,$if2($rsearch(%_narrator%,^\(.+?\) with ),%_narrator%))
+  $set(_narrator,$if2(%_narrator%,$getmulti(%_albumartists%,1)))
+  $set(_narrator,$if2(%_narrator%,$if($in(%releasetype%,audio drama),Audio Drama)))
+  $set(_width,$if($gt($len(%totaltracks%),2),$len(%totaltracks%),2))
+  $replace(%_author%,:,)/
+  $replace(%album%,:,)$if(%_narrator%, \(%_narrator%\))/
+  $if($gt(%totaldiscs%,1),$num(%discnumber%,$len(%totaldiscs%))-)
+  $num(%tracknumber%,%_width%) $replace(%title%,:,)
+id: ff8f21db-b54c-4e1f-b3e2-335d7c675145

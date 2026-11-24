@@ -1,0 +1,16 @@
+title: Music
+description: |
+  Music library: Album artist/Album/[disc-]NN Title.
+  Based on Picard's default script. Destination directory /mnt/prudence/music.
+  Kept in github.com/cxd309/server-utilities (picard/).
+author: Chris Davis
+license: MIT
+version: '1.0'
+last_updated: 2026-11-24 04:16:00 UTC
+script_language_version: '1.0'
+script: |
+  $noop(Destination directory: /mnt/prudence/music)
+  $if2(%albumartist%,%artist%)/
+  $if(%albumartist%,%album%/,)
+  $if($gt(%totaldiscs%,1),$if($gt(%totaldiscs%,9),$num(%discnumber%,2),%discnumber%)-,)$if($and(%albumartist%,%tracknumber%),$num(%tracknumber%,2) ,)$if(%_multiartist%,%artist% - ,)%title%
+id: 572e10ba-74b2-4034-a186-bf8cfd32de61
