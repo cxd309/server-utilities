@@ -29,6 +29,7 @@ import (
 	"time"
 
 	"github.com/cxd309/server-utilities/internal/ffmpeg"
+	"github.com/cxd309/server-utilities/internal/podcast"
 )
 
 const (
@@ -237,7 +238,7 @@ func run(ctx context.Context, dryRun bool) (err error) {
 			fmt.Printf("skip  %s (already there)\n", filepath.Base(out))
 			continue
 		}
-		fmt.Printf("%s  ← %d tracks of %q, dated %s\n", filepath.Base(out), len(g.tracks), g.name, date)
+		fmt.Printf("%s  <- %d tracks of %q, dated %s\n", filepath.Base(out), len(g.tracks), g.name, date)
 		if dryRun {
 			continue
 		}
@@ -267,6 +268,10 @@ func joinEpisode(ctx context.Context, g group, ep episode, date string, n, total
 		}
 	}()
 	if err = ffmpeg.Run(ctx, joinArgs(listPath, filepath.Join(src, "cover.jpg"), part, ep, date, n, total)...); err != nil {
+		return err
+	}
+	// Without this flag iTunes silently refuses the file, even though its media kind is Podcast
+	if err = podcast.Flag(ctx, part); err != nil {
 		return err
 	}
 	return os.Rename(part, out)

@@ -23,7 +23,9 @@ lossless ALAC (16-bit/44.1 kHz) with the box set cover, tagged as a podcast
 
 `main.go` groups the CD tracks by the name before the last ", TR ", pairs each group with
 the CSV row in the same position (stopping if the CD name isn't in the CSV title), joins the
-tracks with ffmpeg's concat demuxer into ALAC, and writes the tags. Existing episodes are
+tracks with ffmpeg's concat demuxer into ALAC, writes the tags, and then sets the podcast
+flag with `internal/podcast` (Python's mutagen): iTunes silently refuses a file whose media
+kind is Podcast without it, and ffmpeg can't write it. Existing episodes are
 skipped, so it can be re-run.
 
 ```sh
