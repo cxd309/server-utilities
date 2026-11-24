@@ -9,6 +9,7 @@ the decisions made, and the command that was run.
 | Job               | What it did                                            |
 | ----------------- | ------------------------------------------------------ |
 | `cabin-pressure/` | 14-CD box set -> 28 podcast episodes (ALAC), A–Z order |
+| `bleak-expectations/` | Audible download (30 chapters) -> 30 podcast episodes, re-titled |
 
 Run from the repo root, e.g. `go run ./one-off/cabin-pressure --dry-run`.
 If two jobs ever need the same code, that's the sign to turn it into a proper tool.
