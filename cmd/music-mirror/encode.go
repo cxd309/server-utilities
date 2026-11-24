@@ -44,13 +44,16 @@ func metadataArgs(tags trackTags) (args []string) {
 func ffmpegArgs(src, out string, tags trackTags) (args []string) {
 	args = []string{
 		"-i", src,
-		"-map", "0:a:0", // first audio stream only, which drops embedded cover art
+		"-map", "0:a:0", // the first audio stream...
+		"-map", "0:v:0?", // ...and the embedded cover, if there is one ("?": it's optional)
 		"-map_metadata", "-1", // copy no tags across; we write our own below
 		// Older iPods only play ALAC up to 16-bit/48 kHz, so bring anything
 		// bigger down to CD quality. A no-op for files that already are;
 		// dither only kicks in when reducing bit depth.
 		"-af", "aresample=osr=44100:osf=s16p:dither_method=triangular",
 		"-c:a", "alac",
+		"-c:v", "copy", // the cover is already a JPEG or PNG
+		"-disposition:v", "attached_pic", // store it as cover art, not as a video track
 	}
 	args = append(args, metadataArgs(tags)...)
 	return append(args,

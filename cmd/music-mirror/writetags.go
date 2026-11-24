@@ -3,7 +3,7 @@ package main
 import "github.com/bogem/id3v2/v2"
 
 // writeID3 gives the MP3 at path a fresh ID3v2.3 tag containing only tags.
-// Any existing tag, including cover art, is replaced.
+// Any existing tag is replaced; cover art is only kept if tags.Cover carries it.
 func writeID3(path string, tags trackTags) (err error) {
 	var tag *id3v2.Tag
 	// Parse: false still notes the size of any existing tag,
@@ -27,15 +27,19 @@ func writeID3(path string, tags trackTags) (err error) {
 	set("TPE2", tags.AlbumArtist)
 	set("TCON", tags.Genre)
 	set("TCOM", tags.Composer)
-	set("TSOP", tags.ArtistSort)
-	set("TSO2", tags.AlbumArtistSort) // iTunes frame
-	set("TSOA", tags.AlbumSort)
-	set("TSOT", tags.TitleSort)
 	set("TYER", tags.Year) // v2.3 year frame (v2.4 calls it TDRC)
 	set("TRCK", tags.Track)
 	set("TPOS", tags.Disc)
 	if tags.Compilation {
 		set("TCMP", "1") // iTunes compilation flag
+	}
+	if tags.Cover != nil {
+		tag.AddAttachedPicture(id3v2.PictureFrame{
+			Encoding:    id3v2.EncodingUTF16,
+			MimeType:    tags.Cover.mime,
+			PictureType: id3v2.PTFrontCover,
+			Picture:     tags.Cover.data,
+		})
 	}
 	return tag.Save()
 }

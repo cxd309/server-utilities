@@ -44,9 +44,8 @@ func TestWriteID3RoundTrip(t *testing.T) {
 	want := trackTags{
 		Title: "Feel So Different", Artist: "Sinéad O’Connor", Album: "I Do Not Want What I Haven’t Got",
 		AlbumArtist: "Sinéad O’Connor", Genre: "Rock; Pop", Composer: "Sinéad O’Connor",
-		ArtistSort: "O’Connor, Sinéad", AlbumArtistSort: "O’Connor, Sinéad",
-		AlbumSort: "I Do Not Want", TitleSort: "Feel So Different",
-		Year: "1990", Track: "1/10", Disc: "1/1", Compilation: true,
+		Cover: &cover{mime: "image/jpeg", data: []byte{0xff, 0xd8, 0xff, 0xe0, 1, 2, 3}},
+		Year:  "1990", Track: "1/10", Disc: "1/1", Compilation: true,
 	}
 	require.NoError(t, writeID3(mp3, want))
 

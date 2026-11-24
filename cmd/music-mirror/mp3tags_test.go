@@ -64,6 +64,7 @@ func TestReadMP3(t *testing.T) {
 		Genre:       "Jazz; Christmas",
 		Year:        "1967", // TDOR beats TDRC
 		Track:       "1/12",
+		Cover:       &cover{mime: "image/jpeg", data: make([]byte, 50_000)},
 	}, got)
 }
 

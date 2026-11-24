@@ -9,10 +9,17 @@ import (
 // Empty fields are skipped
 type trackTags struct {
 	Title, Artist, Album, AlbumArtist, Genre, Composer string
-	ArtistSort, AlbumArtistSort, AlbumSort, TitleSort  string
 	Year                                               string // four digits, original release where known
 	Track, Disc                                        string // "n" or "n/total"
 	Compilation                                        bool
+	Cover                                              *cover // embedded art, MP3 sources only; nil for none
+}
+
+// cover is an embedded picture: the front cover, as Picard embeds it.
+// FLAC covers go straight through ffmpeg, so only MP3s carry one here
+type cover struct {
+	mime string // e.g. "image/jpeg"
+	data []byte
 }
 
 // joinValues trims each value, drops empty ones and joins the rest with "; ".

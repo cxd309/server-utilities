@@ -98,3 +98,28 @@ func makePlainMP3(t *testing.T, path string) {
 		path).CombinedOutput()
 	require.NoError(t, err, string(out))
 }
+
+func TestEncodeKeepsCover(t *testing.T) {
+	requireFFmpeg(t)
+	dir := t.TempDir()
+	jpg := filepath.Join(dir, "cover.jpg")
+	src := filepath.Join(dir, "tone.flac")
+	out := filepath.Join(dir, "tone.m4a.part")
+	for _, args := range [][]string{
+		{"-f", "lavfi", "-i", "color=c=red:s=500x500", "-frames:v", "1", jpg},
+		{"-f", "lavfi", "-i", "sine=duration=1", "-i", jpg,
+			"-map", "0", "-map", "1", "-c:a", "flac", "-c:v", "copy", "-disposition:v", "attached_pic", src},
+	} {
+		cmd := exec.Command("ffmpeg", append([]string{"-nostdin", "-v", "error", "-y"}, args...)...)
+		b, err := cmd.CombinedOutput()
+		require.NoError(t, err, string(b))
+	}
+
+	require.NoError(t, encode(context.Background(), src, out, trackTags{Title: "Song"}))
+
+	info, err := ffmpeg.Probe(context.Background(), out)
+	require.NoError(t, err)
+	require.Len(t, info.Streams, 2, "the audio and its cover")
+	assert.Equal(t, "alac", info.Streams[0].CodecName)
+	assert.Equal(t, "mjpeg", info.Streams[1].CodecName)
+}

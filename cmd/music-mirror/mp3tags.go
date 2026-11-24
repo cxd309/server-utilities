@@ -48,20 +48,35 @@ func fromID3(tag *id3v2.Tag) (tags trackTags) {
 	artist, guests := splitCredit(text("TPE1"), userText(tag, "ARTISTS"))
 
 	return trackTags{
-		Title:           titleWithGuests(text("TIT2"), guests),
-		Artist:          artist,
-		Album:           text("TALB"),
-		AlbumArtist:     text("TPE2"),
-		Genre:           text("TCON"),
-		Composer:        text("TCOM"),
-		ArtistSort:      text("TSOP"),
-		AlbumArtistSort: text("TSO2"),
-		AlbumSort:       text("TSOA"),
-		TitleSort:       text("TSOT"),
+		Title:       titleWithGuests(text("TIT2"), guests),
+		Artist:      artist,
+		Album:       text("TALB"),
+		AlbumArtist: text("TPE2"),
+		Genre:       text("TCON"),
+		Composer:    text("TCOM"),
 		// Original release (v2.4 TDOR, v2.3 TORY), then recording/release date.
 		Year:        yearOf(text("TDOR", "TORY"), text("TDRC", "TYER")),
 		Track:       text("TRCK"),
 		Disc:        text("TPOS"),
 		Compilation: text("TCMP") == "1",
+		Cover:       frontCover(tag),
 	}
+}
+
+// frontCover returns the tag's front cover picture, or failing that its first picture,
+// or nil when it has none
+func frontCover(tag *id3v2.Tag) (c *cover) {
+	for _, f := range tag.GetFrames(tag.CommonID("Attached picture")) {
+		pic, ok := f.(id3v2.PictureFrame)
+		if !ok {
+			continue
+		}
+		if pic.PictureType == id3v2.PTFrontCover {
+			return &cover{mime: pic.MimeType, data: pic.Picture}
+		}
+		if c == nil {
+			c = &cover{mime: pic.MimeType, data: pic.Picture}
+		}
+	}
+	return c
 }
