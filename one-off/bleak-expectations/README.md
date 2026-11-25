@@ -16,8 +16,9 @@ artist Mark Evans, media kind Podcast plus the podcast flag).
 - **Release dates** are the real first Radio 4 broadcasts, which are already in order
   (5 series of 6 episodes, 2007–2012). The series and episode are in each description.
 - Episode data is from the BBC programme pages, collected into `episodes.csv`.
-- **Artwork:** the download has none. Put a `cover.jpg` in this folder before running and it's
-  embedded in every episode; without one the episodes have no artwork.
+- **Artwork:** the download has none, so `cover.jpg` here (the Audible cover, 894×894) is
+  embedded in every episode. The first run happened before it was added; the art was then put
+  into the existing files in place with mutagen, so their paths (and iTunes entries) didn't change.
 
 ## How it works
 
