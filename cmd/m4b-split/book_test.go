@@ -41,6 +41,7 @@ func TestBookFromInfo(t *testing.T) {
 		author:   "Ursula K. Le Guin",
 		narrator: "Kobna Holdbrook-Smith",
 		date:     "2018",
+		cover:    "mjpeg",
 		chapters: []chapter{
 			{start: 0, end: 28.500998, title: "Opening Credits"},
 			{start: 28.500998, end: 1924.446984, title: "Chapter 1. Warriors in the Mist"},

@@ -44,30 +44,84 @@ func cutChapter(chapter int, frames, limit int64) (pieces []piece) {
 }
 
 // planParts packs a book's chapters, given as frame counts, into parts of at most limit frames.
-// Whole chapters are added to a part until the next one won't fit.
+// It uses as few parts as will fit, then evens them out (see evenCuts),
+// so a book just over the limit becomes two halves rather than a full part and a stub.
 // A chapter too long for any part is first cut into equal pieces
 func planParts(chapterFrames []int64, limit int64) (parts [][]piece, err error) {
 	if limit <= 0 {
 		return nil, errBadLimit
 	}
 
-	var current []piece
-	var used int64 // frames in current so far
+	var pieces []piece
 	for i, frames := range chapterFrames {
-		for _, p := range cutChapter(i, frames, limit) {
-			size := p.end - p.start
-			if len(current) > 0 && used+size > limit {
-				parts = append(parts, current)
-				current, used = nil, 0
-			}
-			current = append(current, p)
-			used += size
-		}
+		pieces = append(pieces, cutChapter(i, frames, limit)...)
 	}
-	if len(current) > 0 {
-		parts = append(parts, current)
+
+	// The fewest parts: fill each one until the next piece won't fit
+	var n int
+	var used int64 // frames in the part being filled
+	for i, p := range pieces {
+		size := p.end - p.start
+		if i == 0 || used+size > limit {
+			n++
+			used = 0
+		}
+		used += size
+	}
+
+	for _, run := range evenCuts(pieces, n, limit) {
+		parts = append(parts, pieces[run[0]:run[1]])
 	}
 	return parts, nil
+}
+
+// evenCuts splits pieces into n runs of at most limit frames each, as evenly as it can:
+// of all the ways to do it, the one with the smallest sum of squared run lengths.
+// Each run is returned as [from, to) indexes into pieces.
+// planParts makes sure n runs can fit
+func evenCuts(pieces []piece, n int, limit int64) (runs [][2]int) {
+	m := len(pieces)
+	sum := make([]int64, m+1) // sum[j] is the frames in pieces[:j]
+	for i, p := range pieces {
+		sum[i+1] = sum[i] + p.end - p.start
+	}
+
+	// cost[k][j] is the best score for the first j pieces in k runs, and
+	// from[k][j] is where the last of those runs starts
+	const impossible = math.MaxInt64
+	cost := make([][]int64, n+1)
+	from := make([][]int, n+1)
+	for k := range cost {
+		cost[k] = make([]int64, m+1)
+		from[k] = make([]int, m+1)
+		for j := range cost[k] {
+			cost[k][j] = impossible
+		}
+	}
+	cost[0][0] = 0
+	for k := 1; k <= n; k++ {
+		for j := k; j <= m; j++ {
+			for i := j - 1; i >= k-1; i-- { // the last run is pieces[i:j], growing leftwards
+				size := sum[j] - sum[i]
+				if size > limit {
+					break
+				}
+				if cost[k-1][i] == impossible {
+					continue
+				}
+				if c := cost[k-1][i] + size*size; c < cost[k][j] {
+					cost[k][j], from[k][j] = c, i
+				}
+			}
+		}
+	}
+
+	runs = make([][2]int, n)
+	for k, j := n, m; k > 0; k-- {
+		runs[k-1] = [2]int{from[k][j], j}
+		j = from[k][j]
+	}
+	return runs
 }
 
 // planBook splits a book into parts of at most limit frames.
@@ -119,7 +173,7 @@ func meaningfulSection(name string) (section string) {
 
 // outputBytesPerFrame estimates how big a book's parts will be, per frame, for partLimit.
 // Copied AAC keeps its size. FLAC becomes ALAC a little bigger than the FLAC.
-// AAC that's decoded to ALAC is taken as uncompressed PCM, the most it could be.
+// Anything else decoded to ALAC (MP3, say) is taken as uncompressed PCM, the most it could be.
 // It's 0 (unknown) for a book with no chapters or no frames
 func outputBytesPerFrame(d download) (bpf float64) {
 	var bytes, frames int64
@@ -132,7 +186,7 @@ func outputBytesPerFrame(d download) (bpf float64) {
 	}
 	codec := d.chapters[0].codec // a book never mixes codecs
 	switch {
-	case canCopy(codec, d.sampleRate):
+	case canCopy(codec):
 		bpf = float64(bytes) / float64(frames)
 	case codec == "flac":
 		bpf = alacOverFLAC * float64(bytes) / float64(frames)

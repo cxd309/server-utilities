@@ -140,7 +140,7 @@ func joinPart(ctx context.Context, part []piece, chapters []chapterFile, sampleR
 	metaPath := filepath.Join(dir, "meta.txt")
 	meta := ";FFMETADATA1\n" + tags + chapterMeta(part, chapters, sampleRate)
 	// A book never mixes codecs, so the part's first chapter speaks for the rest
-	copyAudio := canCopy(chapters[part[0].chapter].codec, sampleRate)
+	copyAudio := canCopy(chapters[part[0].chapter].codec)
 	preroll := !copyAudio && part[0].start > 0 // only a part's first piece can start mid-chapter
 	if err = os.WriteFile(listPath, []byte(concatList(part, chapters, sampleRate, preroll)), 0o600); err != nil {
 		return err
@@ -152,9 +152,10 @@ func joinPart(ctx context.Context, part []piece, chapters []chapterFile, sampleR
 }
 
 // canCopy reports whether a book's audio can go into its parts unchanged.
-// The iPod mini plays Audible's 44.1 kHz AAC cleanly but scratches on 22 kHz AAC,
-// and can't play FLAC at all, so anything other than 44.1 kHz AAC is converted to ALAC instead
-func canCopy(codec string, sampleRate int) (yes bool) {
-	yes = codec == "aac" && sampleRate == 44100
+// The iPod plays AAC at any sample rate (22 kHz scratched on the Mac-formatted mini,
+// to be retested on the Windows-formatted iPods) but can't play FLAC,
+// so anything other than AAC is converted to ALAC
+func canCopy(codec string) (yes bool) {
+	yes = codec == "aac"
 	return yes
 }

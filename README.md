@@ -26,6 +26,9 @@ After changing a script in Picard, **Export** it over the file here and commit,
 then re-save the affected albums so their files move.
 The destination directory is a separate Picard setting; each script notes the one it expects.
 
+For audiobooks, turn on **Move additional files** in Picard's options with the pattern `cover.jpg`,
+so the cover m4b-split saves moves with the book but cue files and the like stay behind.
+
 ## One-off jobs
 
 `one-off/` holds scripts for unusual releases, run once by hand and kept as worked examples.

@@ -30,3 +30,6 @@ with `internal/podcast`. Existing episodes are skipped, so it can be re-run.
 go run ./one-off/bleak-expectations --dry-run
 go run ./one-off/bleak-expectations
 ```
+
+**Source removed:** once the episodes were in `/mnt/prudence/podcasts`, the source folder was
+deleted from the audiobook library (2026-11-25), so this script can no longer be re-run as is.

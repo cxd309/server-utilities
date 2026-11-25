@@ -8,9 +8,6 @@ default:
 test:
     go test ./...
 
-# vet
-vet:
-    
 # format Go code and everything dprint covers
 fmt:
     gofmt -w .

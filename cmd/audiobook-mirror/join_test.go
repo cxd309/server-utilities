@@ -136,19 +136,17 @@ func TestJoinArgs(t *testing.T) {
 
 func TestCanCopy(t *testing.T) {
 	tests := []struct {
-		name       string
-		codec      string
-		sampleRate int
-		want       bool
+		name  string
+		codec string
+		want  bool
 	}{
-		{name: "AAC at 44.1 kHz is copied", codec: "aac", sampleRate: 44100, want: true},
-		{name: "AAC at 22.05 kHz is re-encoded", codec: "aac", sampleRate: 22050, want: false},
-		{name: "AAC at 48 kHz is re-encoded", codec: "aac", sampleRate: 48000, want: false},
-		{name: "FLAC at 44.1 kHz is re-encoded", codec: "flac", sampleRate: 44100, want: false},
+		{name: "AAC is copied, whatever its sample rate", codec: "aac", want: true},
+		{name: "FLAC is re-encoded", codec: "flac", want: false},
+		{name: "MP3 is re-encoded", codec: "mp3", want: false},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			assert.Equal(t, tt.want, canCopy(tt.codec, tt.sampleRate))
+			assert.Equal(t, tt.want, canCopy(tt.codec))
 		})
 	}
 }
@@ -182,22 +180,15 @@ func TestJoinPart(t *testing.T) {
 	if _, err := exec.LookPath("ffmpeg"); err != nil {
 		t.Skip("ffmpeg not installed")
 	}
-	tests := []struct {
-		sampleRate int
-		wantCodec  string
-	}{
-		{44100, "aac"},  // copied
-		{22050, "alac"}, // converted
-	}
-	for _, tt := range tests {
-		t.Run(strconv.Itoa(tt.sampleRate), func(t *testing.T) {
+	for _, sampleRate := range []int{44100, 22050} { // AAC is copied at either rate
+		t.Run(strconv.Itoa(sampleRate), func(t *testing.T) {
 			ctx := context.Background()
 			dir := t.TempDir()
 
 			// A 3-second book, cut into 1-second chapters the way m4b-split does
 			src := filepath.Join(dir, "book.m4a")
 			require.NoError(t, ffmpeg.Run(ctx,
-				"-f", "lavfi", "-i", "sine=duration=3:sample_rate="+strconv.Itoa(tt.sampleRate),
+				"-f", "lavfi", "-i", "sine=duration=3:sample_rate="+strconv.Itoa(sampleRate),
 				"-c:a", "aac", "-f", "ipod", src))
 			require.NoError(t, ffmpeg.Run(ctx,
 				"-i", src, "-c", "copy", "-f", "segment", "-segment_format", "ipod",
@@ -218,13 +209,13 @@ func TestJoinPart(t *testing.T) {
 			// All of chapter 0, then the first 10 frames of chapter 1
 			out := filepath.Join(dir, "Part 01.m4b")
 			part := []piece{{0, 0, chapters[0].frames}, {1, 0, 10}}
-			require.NoError(t, joinPart(ctx, part, chapters, tt.sampleRate, tags, cover, out))
+			require.NoError(t, joinPart(ctx, part, chapters, sampleRate, tags, cover, out))
 			assert.Equal(t, (chapters[0].frames+10)*samplesPerFrame, countSamples(t, out))
 
 			info, err := ffmpeg.Probe(ctx, out)
 			require.NoError(t, err)
-			assert.Equal(t, tt.wantCodec, info.Streams[0].CodecName)
-			assert.Equal(t, strconv.Itoa(tt.sampleRate), info.Streams[0].SampleRate)
+			assert.Equal(t, "aac", info.Streams[0].CodecName)
+			assert.Equal(t, strconv.Itoa(sampleRate), info.Streams[0].SampleRate)
 			assert.Equal(t, "Test Book, Part 1 of 2", info.Format.Tags["title"])
 			assert.Equal(t, "1/2", info.Format.Tags["track"])
 			assert.Equal(t, "2", info.Format.Tags["media_type"])
@@ -238,18 +229,48 @@ func TestJoinPart(t *testing.T) {
 			assert.Equal(t, "One", info.Chapters[0].Tags["title"])
 			assert.Equal(t, "Can't Two", info.Chapters[1].Tags["title"])
 
-			// A part that starts mid-chapter
+			// A part that starts mid-chapter. Copied AAC can only start on a whole packet.
+			// Depending on the ffmpeg version, the concat demuxer may also keep the frame just
+			// before the inpoint: at most 23 ms heard twice at a part boundary,
+			// and only in a chapter over 13.5 h
 			mid := filepath.Join(dir, "Part 02.m4b")
-			require.NoError(t, joinPart(ctx, []piece{{1, 10, 20}}, chapters, tt.sampleRate, tags, "", mid))
-			got := countSamples(t, mid)
-			if tt.wantCodec == "aac" {
-				// Copied AAC can only start on a whole packet. Depending on the ffmpeg version,
-				// the concat demuxer may also keep the frame just before the inpoint:
-				// at most 23 ms heard twice at a part boundary, and only in a chapter over 13.5 h
-				assert.InDelta(t, 10*samplesPerFrame, got, samplesPerFrame, "10 frames, give or take one")
-			} else {
-				assert.Equal(t, int64(10*samplesPerFrame), got, "decoded audio is cut exactly")
-			}
+			require.NoError(t, joinPart(ctx, []piece{{1, 10, 20}}, chapters, sampleRate, tags, "", mid))
+			assert.InDelta(t, 10*samplesPerFrame, countSamples(t, mid), samplesPerFrame, "10 frames, give or take one")
 		})
 	}
+}
+
+// FLAC from CDs is converted to ALAC. Only whole chapters are tested:
+// a cut inside a FLAC chapter lands on a FLAC block (4,096 samples), not a frame,
+// but that only happens to a CD track too long for a part, about 6 h
+func TestJoinPartFLAC(t *testing.T) {
+	if _, err := exec.LookPath("ffmpeg"); err != nil {
+		t.Skip("ffmpeg not installed")
+	}
+	ctx := context.Background()
+	dir := t.TempDir()
+
+	// A file per track, as ripped from a CD
+	var chapters []chapterFile
+	var wantSamples int64
+	for i, title := range []string{"One", "Two"} {
+		path := filepath.Join(dir, "ch"+strconv.Itoa(i)+".flac")
+		require.NoError(t, ffmpeg.Run(ctx, "-f", "lavfi", "-i", "sine=duration=1:sample_rate=44100", "-c:a", "flac", path))
+		samples := countSamples(t, path)
+		wantSamples += samples
+		frames := (samples + samplesPerFrame - 1) / samplesPerFrame // as framesFor does
+		chapters = append(chapters, chapterFile{path: path, title: title, frames: frames, codec: "flac"})
+	}
+
+	out := filepath.Join(dir, "Part 1.m4b")
+	part := []piece{{0, 0, chapters[0].frames}, {1, 0, chapters[1].frames}}
+	tags := tagLines(bookTags{title: "Test Book"}, "Test Book", 1, 1)
+	require.NoError(t, joinPart(ctx, part, chapters, 44100, tags, "", out))
+	assert.Equal(t, wantSamples, countSamples(t, out))
+
+	info, err := ffmpeg.Probe(ctx, out)
+	require.NoError(t, err)
+	assert.Equal(t, "alac", info.Streams[0].CodecName)
+	require.Len(t, info.Chapters, 2)
+	assert.Equal(t, "Two", info.Chapters[1].Tags["title"])
 }

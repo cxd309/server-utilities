@@ -64,7 +64,7 @@ func TestBuildBook(t *testing.T) {
 	require.NoError(t, err)
 
 	root := t.TempDir()
-	b := book{src: src, dst: filepath.Join(root, "Author", "Test Book")}
+	b := book{src: src, dst: filepath.Join(root, "Author", "Test Book (A Reader)")}
 	touch(t, b.dst, "Part 03.m4b") // from an older, longer build
 
 	// Each 1-second chapter is about 44 frames, so a limit of 50 gives one part each
@@ -75,6 +75,7 @@ func TestBuildBook(t *testing.T) {
 
 	info, err := ffmpeg.Probe(ctx, filepath.Join(b.dst, "Part 02.m4b"))
 	require.NoError(t, err)
-	assert.Equal(t, "Test Book, Part 2 of 2", info.Format.Tags["title"])
+	assert.Equal(t, "Test Book (A Reader), Part 2 of 2", info.Format.Tags["title"])
+	assert.Equal(t, "Test Book (A Reader)", info.Format.Tags["album"], "named after the folder, not the album tag")
 	assert.Equal(t, "2/2", info.Format.Tags["track"])
 }

@@ -1,6 +1,7 @@
 // Command audiobook-mirror turns the audiobook library into iPod-safe parts:
-// each book's chapters are joined, without re-encoding, into tagged .m4b parts
-// of at most 79 minutes, mirroring the library's Author/Title folders.
+// each book's chapters are joined into tagged .m4b parts, as few and as even as
+// MarkAble's limits allow (see consts.go), mirroring the library's Author/Title folders.
+// AAC is copied as it is; FLAC from CDs becomes ALAC.
 package main
 
 import (

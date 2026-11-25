@@ -18,6 +18,8 @@ func buildDir(dst string) (dir string) {
 
 // buildBook plans a book into parts with planBook,
 // builds them all in the hidden build folder, then swaps that folder into place at b.dst.
+// The album is the book's folder name, e.g. "Mort (Tony Robinson)", not its album tag,
+// so two readings of the same book stay two albums on the iPod.
 // It returns how many parts it wrote
 func buildBook(ctx context.Context, b book, d download, limit int64) (parts int, err error) {
 	var plan [][]piece
@@ -38,6 +40,7 @@ func buildBook(ctx context.Context, b book, d download, limit int64) (parts int,
 		}
 	}()
 
+	d.tags.title = filepath.Base(b.dst)
 	sections := make([]string, len(plan))
 	for i, part := range plan {
 		sections[i] = d.chapters[part[0].chapter].section // planBook never mixes sections in a part

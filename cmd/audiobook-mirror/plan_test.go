@@ -58,7 +58,11 @@ func TestPlanParts(t *testing.T) {
 		{"no chapters", nil, nil},
 		{"one chapter", []int64{5}, [][]piece{{{0, 0, 5}}}},
 		{"all in one part", []int64{3, 4, 3}, [][]piece{{{0, 0, 3}, {1, 0, 4}, {2, 0, 3}}}},
-		{"exactly full", []int64{5, 5, 1}, [][]piece{{{0, 0, 5}, {1, 0, 5}}, {{2, 0, 1}}}},
+		{"evened out, not 5+5 then 1", []int64{5, 5, 1}, [][]piece{{{0, 0, 5}}, {{1, 0, 5}, {2, 0, 1}}}},
+		{"two halves, not 10 then 2", []int64{2, 2, 2, 2, 2, 2}, [][]piece{
+			{{0, 0, 2}, {1, 0, 2}, {2, 0, 2}},
+			{{3, 0, 2}, {4, 0, 2}, {5, 0, 2}},
+		}},
 		{"next won't fit", []int64{6, 5, 4}, [][]piece{{{0, 0, 6}}, {{1, 0, 5}, {2, 0, 4}}}},
 		{"long chapter alone", []int64{25}, [][]piece{{{0, 0, 9}}, {{0, 9, 17}}, {{0, 17, 25}}}},
 		{"long chapter after a short one", []int64{3, 11}, [][]piece{{{0, 0, 3}, {1, 0, 6}}, {{1, 6, 11}}}},
@@ -182,8 +186,11 @@ func TestOutputBytesPerFrame(t *testing.T) {
 		{"FLAC to ALAC is a bit bigger", download{sampleRate: 44100, chapters: []chapterFile{
 			{codec: "flac", frames: 1000, bytes: 2_000_000},
 		}}, 2200},
-		{"22 kHz AAC to ALAC counts as PCM", download{sampleRate: 22050, chapters: []chapterFile{
+		{"22 kHz AAC is copied too", download{sampleRate: 22050, chapters: []chapterFile{
 			{codec: "aac", frames: 1000, bytes: 180_000},
+		}}, 180},
+		{"MP3 to ALAC counts as PCM", download{sampleRate: 44100, chapters: []chapterFile{
+			{codec: "mp3", frames: 1000, bytes: 400_000},
 		}}, 4096},
 		{"no chapters is unknown", download{sampleRate: 44100}, 0},
 	}

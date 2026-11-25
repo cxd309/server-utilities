@@ -23,6 +23,7 @@ type book struct {
 	author   string
 	narrator string
 	date     string
+	cover    string // the embedded picture's codec, e.g. "mjpeg"; "" for none
 	chapters []chapter
 }
 
@@ -51,6 +52,12 @@ func bookFromInfo(info ffmpeg.Info, fallbackTitle string) (b book, err error) {
 	}
 	if b.title == "" {
 		b.title = fallbackTitle
+	}
+	for _, s := range info.Streams { // ffprobe lists an embedded picture as a video stream
+		if s.CodecType == "video" {
+			b.cover = s.CodecName
+			break
+		}
 	}
 
 	for _, c := range info.Chapters {

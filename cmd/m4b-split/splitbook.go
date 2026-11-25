@@ -13,6 +13,8 @@ import (
 // The work happens in a hidden temporary folder beside dir,
 // renamed into place only once every chapter is done,
 // so an interrupted run leaves nothing half-finished behind.
+// An embedded cover is saved beside the chapters as cover.jpg,
+// so the cover survives once the source is gone.
 func splitBook(ctx context.Context, src, dir string, b book) (err error) {
 	if _, err = os.Stat(dir); err == nil {
 		return fmt.Errorf("%s: %w", dir, errAlreadySplit)
@@ -44,6 +46,12 @@ func splitBook(ctx context.Context, src, dir string, b book) (err error) {
 	for n := 1; n <= len(b.chapters); n++ {
 		if err = tagPiece(ctx, work, b, n); err != nil {
 			return fmt.Errorf("chapter %d: %w", n, err)
+		}
+	}
+
+	if b.cover != "" {
+		if err = saveCover(ctx, src, filepath.Join(work, coverName), b.cover); err != nil {
+			return fmt.Errorf("cover: %w", err)
 		}
 	}
 

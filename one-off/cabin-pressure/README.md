@@ -32,3 +32,6 @@ skipped, so it can be re-run.
 go run ./one-off/cabin-pressure --dry-run   # the plan
 go run ./one-off/cabin-pressure             # writes the episodes
 ```
+
+**Source removed:** once the episodes were in `/mnt/prudence/podcasts`, the source folder was
+deleted from the audiobook library (2026-11-25), so this script can no longer be re-run as is.

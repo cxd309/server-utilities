@@ -1,5 +1,5 @@
 // Command m4b-split splits a chaptered audiobook file into a set of tagged files per chapter,
-// ready for Picard.
+// ready for Picard, with its embedded cover saved beside them as cover.jpg.
 // No re-encoding performed, only split
 package main
 

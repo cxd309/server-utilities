@@ -8,7 +8,7 @@ import (
 
 // bookTags is what every part of a book is tagged with
 type bookTags struct {
-	title    string // e.g. "Mort"
+	title    string // the album: the album tag, until buildBook swaps in the folder name, e.g. "Mort (Tony Robinson)"
 	author   string // the MusicBrainz credit, e.g. "Terry Pratchett read by Tony Robinson"
 	narrator string // may be empty
 	date     string // may be empty
