@@ -51,16 +51,11 @@ func chapterFromInfo(path string, info ffmpeg.Info) (c chapterFile, sampleRate i
 	}
 
 	tags := lowerKeys(info.Format.Tags)
-	subtitle := tags["discsubtitle"]
-	if subtitle == "" {
-		subtitle = tags["disc_subtitle"] // what newer ffprobes call it, as on the server
-	}
 	c = chapterFile{
-		path:    path,
-		title:   strings.TrimSpace(tags["title"]),
-		frames:  framesFor(seconds, sampleRate),
-		codec:   audio.CodecName,
-		section: meaningfulSection(subtitle),
+		path:   path,
+		title:  strings.TrimSpace(tags["title"]),
+		frames: framesFor(seconds, sampleRate),
+		codec:  audio.CodecName,
 	}
 	if c.title == "" {
 		c.title = strings.TrimSuffix(filepath.Base(path), filepath.Ext(path))
@@ -155,6 +150,14 @@ func readDownload(ctx context.Context, dir string) (d download, err error) {
 			return download{}, &sampleRateError{Path: path, Want: d.sampleRate, Got: rate}
 		}
 		d.chapters = append(d.chapters, c)
+	}
+
+	var sections []string
+	if sections, err = readSections(dir, paths); err != nil {
+		return download{}, err
+	}
+	for i := range d.chapters {
+		d.chapters[i].section = sections[i]
 	}
 
 	// Picard embeds the cover in every file but may not save a cover.jpg.

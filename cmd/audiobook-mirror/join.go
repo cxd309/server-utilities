@@ -16,7 +16,7 @@ type chapterFile struct {
 	title   string
 	frames  int64
 	codec   string // ffprobe's codec name, such as "aac" or "flac"
-	section string // the medium's name, e.g. "Animal Farm"; "" for none (see meaningfulSection)
+	section string // from sections.txt, e.g. "Animal Farm"; "" for none
 	bytes   int64  // file size, for estimating how big parts will be
 }
 

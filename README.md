@@ -26,8 +26,20 @@ After changing a script in Picard, **Export** it over the file here and commit,
 then re-save the affected albums so their files move.
 The destination directory is a separate Picard setting; each script notes the one it expects.
 
-For audiobooks, turn on **Move additional files** in Picard's options with the pattern `cover.jpg`,
-so the cover m4b-split saves moves with the book but cue files and the like stay behind.
+For audiobooks, turn on **Move additional files** in Picard's options with the patterns
+`cover.jpg sections.txt`, so the cover m4b-split saves and any sections file move with the book,
+but cue files and the like stay behind.
+
+### Collections
+
+A book that's really several, like an omnibus, gets a `sections.txt` in its library folder
+saying where each one starts, so audiobook-mirror gives each its own named parts:
+
+```
+# a chapter file's number, a space, then the section's name
+001 The Murder of Roger Ackroyd
+030 The Mystery of the Blue Train
+```
 
 ## One-off jobs
 

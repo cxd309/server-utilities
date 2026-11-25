@@ -2,8 +2,6 @@ package main
 
 import (
 	"math"
-	"regexp"
-	"strings"
 )
 
 // piece is a stretch of one chapter, measured in frames from the chapter's start.
@@ -126,7 +124,7 @@ func evenCuts(pieces []piece, n int, limit int64) (runs [][2]int) {
 
 // planBook splits a book into parts of at most limit frames.
 // Disc numbers are ignored: a CD's breaks are just where the disc ran out.
-// But a named medium (see meaningfulSection), like "Animal Farm" in a collection,
+// But a section from sections.txt, like "Animal Farm" in a collection,
 // always starts a new part, so each section gets parts of its own
 func planBook(chapters []chapterFile, limit int64) (parts [][]piece, err error) {
 	for start := 0; start < len(chapters); {
@@ -152,23 +150,6 @@ func planBook(chapters []chapterFile, limit int64) (parts [][]piece, err error) 
 		start = end
 	}
 	return parts, nil
-}
-
-// numberedSection matches medium names that only say where a disc comes in the set,
-// like "Disc 1", "CD2", "Disk 3 of 4", "Part II", "Vol. 2", "Side A" or just "1".
-// A bare number is at most two digits, so a title like "1984" isn't caught, and
-// Roman numerals and letters need a word in front, so neither is a title like "Civil"
-var numberedSection = regexp.MustCompile(
-	`(?i)^(?:(?:disc|disk|cd|part|volume|vol\.?|side|tape)\s*(?:\d+|[ivxlc]+|[a-z])|\d{1,2})(?:\s*(?:of|/)\s*(?:\d+|[ivxlc]+))?$`)
-
-// meaningfulSection returns a medium's name if it says what's on the medium,
-// or "" for no name or one that only numbers the disc
-func meaningfulSection(name string) (section string) {
-	section = strings.TrimSpace(name)
-	if numberedSection.MatchString(section) {
-		return ""
-	}
-	return section
 }
 
 // outputBytesPerFrame estimates how big a book's parts will be, per frame, for partLimit.

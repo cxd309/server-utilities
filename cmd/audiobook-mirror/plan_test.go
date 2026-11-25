@@ -145,34 +145,6 @@ func TestPlanBook(t *testing.T) {
 	}
 }
 
-func TestMeaningfulSection(t *testing.T) {
-	tests := []struct {
-		name, want string
-	}{
-		{"Animal Farm", "Animal Farm"},
-		{"  1984 ", "1984"}, // a number, but too long to be a disc count
-		{"The Annals of the Kings and Rulers", "The Annals of the Kings and Rulers"},
-		{"Civil", "Civil"},
-		{"Discworld", "Discworld"},
-		{"Part One", "Part One"}, // words aren't caught: kept, and harmless
-		{"", ""},
-		{"Disc 1", ""},
-		{"disc 2 of 3", ""},
-		{"CD2", ""},
-		{"Disk 3/4", ""},
-		{"Part II", ""},
-		{"Vol. 2", ""},
-		{"Volume 1", ""},
-		{"Side A", ""},
-		{"3", ""},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			assert.Equal(t, tt.want, meaningfulSection(tt.name))
-		})
-	}
-}
-
 func TestOutputBytesPerFrame(t *testing.T) {
 	tests := []struct {
 		name string

@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"os"
 	"os/exec"
 	"path/filepath"
 	"strconv"
@@ -63,24 +64,6 @@ func TestChapterFromInfo(t *testing.T) {
 				Streams: []ffmpeg.Stream{{CodecType: "audio", CodecName: "flac", SampleRate: "22050"}},
 			},
 			chapterFile{path: "/b/001 x.m4a", title: "001 x", frames: 22, codec: "flac"},
-			22050,
-		},
-		{
-			"named medium",
-			ffmpeg.Info{
-				Format:  ffmpeg.Format{Duration: "1.0", Tags: map[string]string{"TITLE": "Chapter 1", "disc": "2/11", "DISCSUBTITLE": "Animal Farm"}},
-				Streams: []ffmpeg.Stream{{CodecType: "audio", CodecName: "flac", SampleRate: "44100"}},
-			},
-			chapterFile{path: "/b/001 x.m4a", title: "Chapter 1", frames: 44, codec: "flac", section: "Animal Farm"},
-			44100,
-		},
-		{
-			"named medium, as newer ffprobes name it",
-			ffmpeg.Info{
-				Format:  ffmpeg.Format{Duration: "1.0", Tags: map[string]string{"title": "Chapter 1", "disc": "1/11", "disc_subtitle": "1984"}},
-				Streams: []ffmpeg.Stream{{CodecType: "audio", CodecName: "aac", SampleRate: "22050"}},
-			},
-			chapterFile{path: "/b/001 x.m4a", title: "Chapter 1", frames: 22, codec: "aac", section: "1984"},
 			22050,
 		},
 	}
@@ -243,5 +226,27 @@ func TestReadDownload(t *testing.T) {
 		require.ErrorAs(t, err, &se)
 		assert.Equal(t, 44100, se.Want)
 		assert.Equal(t, 22050, se.Got)
+	})
+
+	t.Run("sections.txt", func(t *testing.T) {
+		dir := t.TempDir()
+		makeChapter(t, dir, "001 One.m4a", 1, 44100, "One")
+		makeChapter(t, dir, "002 Two.m4a", 1, 44100, "Two")
+		require.NoError(t, os.WriteFile(filepath.Join(dir, sectionsFile), []byte("002 Animal Farm\n"), 0o644))
+
+		d, err := readDownload(ctx, dir)
+		require.NoError(t, err)
+		require.Len(t, d.chapters, 2)
+		assert.Equal(t, "", d.chapters[0].section)
+		assert.Equal(t, "Animal Farm", d.chapters[1].section)
+	})
+
+	t.Run("bad sections.txt", func(t *testing.T) {
+		dir := t.TempDir()
+		makeChapter(t, dir, "001 One.m4a", 1, 44100, "One")
+		require.NoError(t, os.WriteFile(filepath.Join(dir, sectionsFile), []byte("01 Typo\n"), 0o644))
+
+		_, err := readDownload(ctx, dir)
+		assert.ErrorIs(t, err, errSectionStart)
 	})
 }
