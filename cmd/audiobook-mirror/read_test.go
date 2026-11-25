@@ -74,6 +74,15 @@ func TestChapterFromInfo(t *testing.T) {
 			chapterFile{path: "/b/001 x.m4a", title: "Chapter 1", frames: 44, codec: "flac", section: "Animal Farm"},
 			44100,
 		},
+		{
+			"named medium, as newer ffprobes name it",
+			ffmpeg.Info{
+				Format:  ffmpeg.Format{Duration: "1.0", Tags: map[string]string{"title": "Chapter 1", "disc": "1/11", "disc_subtitle": "1984"}},
+				Streams: []ffmpeg.Stream{{CodecType: "audio", CodecName: "aac", SampleRate: "22050"}},
+			},
+			chapterFile{path: "/b/001 x.m4a", title: "Chapter 1", frames: 22, codec: "aac", section: "1984"},
+			22050,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

@@ -51,12 +51,16 @@ func chapterFromInfo(path string, info ffmpeg.Info) (c chapterFile, sampleRate i
 	}
 
 	tags := lowerKeys(info.Format.Tags)
+	subtitle := tags["discsubtitle"]
+	if subtitle == "" {
+		subtitle = tags["disc_subtitle"] // what newer ffprobes call it, as on the server
+	}
 	c = chapterFile{
 		path:    path,
 		title:   strings.TrimSpace(tags["title"]),
 		frames:  framesFor(seconds, sampleRate),
 		codec:   audio.CodecName,
-		section: meaningfulSection(tags["discsubtitle"]),
+		section: meaningfulSection(subtitle),
 	}
 	if c.title == "" {
 		c.title = strings.TrimSuffix(filepath.Base(path), filepath.Ext(path))
