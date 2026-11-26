@@ -89,14 +89,14 @@ func TestPartLimit(t *testing.T) {
 		bytesPerFrame float64
 		want          int64
 	}{
-		// (2³² - 1) / 1024 = 4,194,303 frames: about 27 h at 44.1 kHz
-		{"size unknown, sample limit", 0, 4_194_303},
+		// (2³¹ - 1) / 1024 = 2,097,151 frames: about 13.5 h at 44.1 kHz
+		{"size unknown, sample limit", 0, 2_097_151},
 		// Audible AAC at ~364 bytes per frame: 3.9 GB allows ~10.7M frames
-		{"AAC, sample limit wins", 364, 4_194_303},
+		{"AAC, sample limit wins", 364, 2_097_151},
 		// spoken-word ALAC at ~900 bytes per frame: 3.9 GB allows ~4.3M frames
-		{"speech ALAC, sample limit wins", 900, 4_194_303},
-		// music-like ALAC at ~2,000 bytes per frame: 3.9 GB / 2000 = 1,950,000 frames, ~12.6 h
-		{"dense ALAC, size limit wins", 2000, 1_950_000},
+		{"speech ALAC, sample limit wins", 900, 2_097_151},
+		// uncompressed PCM at 4,096 bytes per frame: 3.9 GB / 4096 = 952,148 frames, ~6.2 h
+		{"PCM-sized ALAC, size limit wins", 4096, 952_148},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
