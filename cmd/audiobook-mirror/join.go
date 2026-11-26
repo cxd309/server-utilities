@@ -159,3 +159,18 @@ func canCopy(codec string) (yes bool) {
 	yes = codec == "aac"
 	return yes
 }
+
+// savePicture saves the picture embedded in src, a chapter file, as cover.jpg in a new
+// temporary folder, and returns its path. The caller removes the folder
+func savePicture(ctx context.Context, src string) (path string, err error) {
+	var dir string
+	if dir, err = os.MkdirTemp("", "audiobook-mirror-cover-"); err != nil {
+		return "", err
+	}
+	path = filepath.Join(dir, "cover.jpg")
+	if err = ffmpeg.Run(ctx, "-i", src, "-map", "0:v:0", "-frames:v", "1", "-c:v", "copy", "-f", "image2", path); err != nil {
+		_ = os.RemoveAll(dir)
+		return "", err
+	}
+	return path, nil
+}

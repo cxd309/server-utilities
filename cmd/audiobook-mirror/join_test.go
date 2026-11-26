@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"os"
 	"os/exec"
 	"path/filepath"
 	"strconv"
@@ -273,4 +274,26 @@ func TestJoinPartFLAC(t *testing.T) {
 	assert.Equal(t, "alac", info.Streams[0].CodecName)
 	require.Len(t, info.Chapters, 2)
 	assert.Equal(t, "Two", info.Chapters[1].Tags["title"])
+}
+
+func TestSavePicture(t *testing.T) {
+	if _, err := exec.LookPath("ffmpeg"); err != nil {
+		t.Skip("ffmpeg not installed")
+	}
+	ctx := context.Background()
+	dir := t.TempDir()
+	picture := filepath.Join(dir, "picture.jpg")
+	require.NoError(t, ffmpeg.Run(ctx, "-f", "lavfi", "-i", "color=c=red:s=64x64", "-frames:v", "1", picture))
+	chapter := filepath.Join(dir, "001 One.m4a")
+	require.NoError(t, ffmpeg.Run(ctx, "-f", "lavfi", "-i", "sine=duration=1", "-i", picture,
+		"-map", "0:a", "-map", "1:v", "-c:a", "aac", "-c:v", "copy", "-disposition:v", "attached_pic", "-f", "ipod", chapter))
+
+	path, err := savePicture(ctx, chapter)
+	require.NoError(t, err)
+	defer os.RemoveAll(filepath.Dir(path))
+	want, err := os.ReadFile(picture)
+	require.NoError(t, err)
+	got, err := os.ReadFile(path)
+	require.NoError(t, err)
+	assert.Equal(t, want, got, "the JPEG, byte for byte")
 }

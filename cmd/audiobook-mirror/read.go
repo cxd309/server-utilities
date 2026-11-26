@@ -161,7 +161,7 @@ func readDownload(ctx context.Context, dir string) (d download, err error) {
 	}
 
 	// Picard embeds the cover in every file but may not save a cover.jpg.
-	// ffmpeg can take the picture straight from a chapter file, so that will do as the source
+	// Then the first chapter file is the cover's source, and buildBook saves the picture from it
 	if d.cover = findCover(dir); d.cover == "" && firstHasPicture {
 		d.cover = paths[0]
 	}

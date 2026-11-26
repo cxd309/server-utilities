@@ -7,6 +7,7 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 // buildDir is the hidden folder a book is built in, beside where it ends up.
@@ -40,6 +41,17 @@ func buildBook(ctx context.Context, b book, d download, limit int64) (parts int,
 		}
 	}()
 
+	// A cover taken straight from a chapter file made the server's ffmpeg time the chapter track
+	// in 1/4,410,000ths of a second, which overflows 32 bits after 16 minutes, and the iPod showed
+	// no chapters at all (Eric read by Colin Morgan). Saving the picture on its own first avoids it
+	cover := d.cover
+	if cover != "" && !strings.EqualFold(filepath.Ext(cover), ".jpg") {
+		if cover, err = savePicture(ctx, d.cover); err != nil {
+			return 0, fmt.Errorf("cover: %w", err)
+		}
+		defer func() { _ = os.RemoveAll(filepath.Dir(cover)) }()
+	}
+
 	d.tags.title = filepath.Base(b.dst)
 	sections := make([]string, len(plan))
 	for i, part := range plan {
@@ -51,7 +63,7 @@ func buildBook(ctx context.Context, b book, d download, limit int64) (parts int,
 		n := i + 1
 		out := filepath.Join(tmp, fmt.Sprintf("Part %02d.m4b", n))
 		tags := tagLines(d.tags, titles[i], n, len(plan))
-		if err = joinPart(ctx, part, d.chapters, d.sampleRate, tags, d.cover, out); err != nil {
+		if err = joinPart(ctx, part, d.chapters, d.sampleRate, tags, cover, out); err != nil {
 			return 0, err
 		}
 	}
