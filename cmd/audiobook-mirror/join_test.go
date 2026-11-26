@@ -232,7 +232,7 @@ func TestJoinPart(t *testing.T) {
 			// A part that starts mid-chapter. Copied AAC can only start on a whole packet.
 			// Depending on the ffmpeg version, the concat demuxer may also keep the frame just
 			// before the inpoint: at most 23 ms heard twice at a part boundary,
-			// and only in a chapter over 13.5 h
+			// and only in a chapter too long for one part
 			mid := filepath.Join(dir, "Part 02.m4b")
 			require.NoError(t, joinPart(ctx, []piece{{1, 10, 20}}, chapters, sampleRate, tags, "", mid))
 			assert.InDelta(t, 10*samplesPerFrame, countSamples(t, mid), samplesPerFrame, "10 frames, give or take one")

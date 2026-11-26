@@ -178,15 +178,12 @@ func outputBytesPerFrame(d download) (bpf float64) {
 }
 
 // partLimit is the most AAC frames one part may hold:
-// the smallest of maxPartSeconds, maxPartSamples and maxPartBytes, in frames.
+// the smaller of maxPartSamples and maxPartBytes, in frames.
 // bytesPerFrame is the expected size of the output, per frame;
 // at or below zero means unknown, and the size limit is skipped.
 // It rounds down, so a part never runs over
-func partLimit(sampleRate int, bytesPerFrame float64) (limit int64) {
-	limit = int64(maxPartSeconds) * int64(sampleRate) / samplesPerFrame
-	if bySamples := int64(maxPartSamples) / samplesPerFrame; bySamples < limit {
-		limit = bySamples
-	}
+func partLimit(bytesPerFrame float64) (limit int64) {
+	limit = int64(maxPartSamples) / samplesPerFrame
 	if bytesPerFrame > 0 {
 		if bySize := int64(maxPartBytes / bytesPerFrame); bySize < limit {
 			limit = bySize

@@ -86,24 +86,21 @@ func TestPlanPartsBadLimit(t *testing.T) {
 func TestPartLimit(t *testing.T) {
 	tests := []struct {
 		name          string
-		sampleRate    int
 		bytesPerFrame float64
 		want          int64
 	}{
-		// 13.5 h × 44100 / 1024 = 2,093,027 frames; 2³¹ samples would allow 2,097,151
-		{"44.1 kHz, time limit wins", 44100, 0, 2_093_027},
-		// 13.5 h at 22.05 kHz is 1,046,513 frames, well inside 2³¹ samples
-		{"22 kHz, time limit wins", 22050, 0, 1_046_513},
-		// at 48 kHz 13.5 h is 2,278,125 frames, so the 32-bit sample limit wins
-		{"48 kHz, sample limit wins", 48000, 0, 2_097_151},
-		// ALAC at ~2,000 bytes per frame: 800 MB / 2000 = 400,000 frames, about 2.6 h
-		{"ALAC, size limit wins", 44100, 2000, 400_000},
-		// Audible AAC at ~364 bytes per frame: 800 MB allows ~2.2M frames, more than time
-		{"AAC, size below time", 44100, 364, 2_093_027},
+		// (2³² - 1) / 1024 = 4,194,303 frames: about 27 h at 44.1 kHz
+		{"size unknown, sample limit", 0, 4_194_303},
+		// Audible AAC at ~364 bytes per frame: 3.9 GB allows ~10.7M frames
+		{"AAC, sample limit wins", 364, 4_194_303},
+		// spoken-word ALAC at ~900 bytes per frame: 3.9 GB allows ~4.3M frames
+		{"speech ALAC, sample limit wins", 900, 4_194_303},
+		// music-like ALAC at ~2,000 bytes per frame: 3.9 GB / 2000 = 1,950,000 frames, ~12.6 h
+		{"dense ALAC, size limit wins", 2000, 1_950_000},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			assert.Equal(t, tt.want, partLimit(tt.sampleRate, tt.bytesPerFrame))
+			assert.Equal(t, tt.want, partLimit(tt.bytesPerFrame))
 		})
 	}
 }

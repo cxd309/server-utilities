@@ -81,7 +81,7 @@ func buildOne(ctx context.Context, b book, dryRun bool) (action string, err erro
 		return "", err
 	}
 	var parts int
-	if parts, err = buildBook(ctx, b, d, partLimit(d.sampleRate, outputBytesPerFrame(d))); err != nil {
+	if parts, err = buildBook(ctx, b, d, partLimit(outputBytesPerFrame(d))); err != nil {
 		return "", err
 	}
 	return fmt.Sprintf("built %d part(s)", parts), nil
