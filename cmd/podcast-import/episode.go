@@ -25,7 +25,7 @@ type source struct {
 }
 
 // copyArgs makes episode n of total from src at out, tagged as a podcast.
-// AAC is copied as it is; anything else, such as FLAC from a CD, becomes 16-bit ALAC
+// AAC is copied as it is, and anything else, such as FLAC from a CD, becomes 16-bit ALAC
 func copyArgs(src source, out string, ep episode, n, total int) (args []string) {
 	args = []string{"-i", src.path}
 	switch src.cover {

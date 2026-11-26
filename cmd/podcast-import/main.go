@@ -1,6 +1,6 @@
 // Command podcast-import turns audiobook-library files into podcast episodes, for radio series
 // that read better as a podcast than as an audiobook (one show, one episode per broadcast).
-// A manifest CSV lists the episodes, one source file each; see readManifest for its columns.
+// A manifest CSV lists the episodes, one source file each (see readManifest for its columns).
 // Each episode goes to /mnt/prudence/podcasts/<show>/NN Title.m4a: AAC is copied as it is,
 // FLAC becomes ALAC, the cover comes from the file or a cover.jpg beside it, and the file is
 // tagged and flagged as a podcast so iTunes takes it.

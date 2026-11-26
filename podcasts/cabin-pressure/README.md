@@ -21,7 +21,7 @@ lossless ALAC (16-bit/44.1 kHz) with the box set cover, tagged as a podcast
 
 ## How it works
 
-A one-off program, `one-off/cabin-pressure/main.go` (deleted since; it's in git history),
+A one-off program, `one-off/cabin-pressure/main.go` (since deleted, but in git history),
 grouped the CD tracks by the name before the last ", TR ", paired each group with the CSV row
 in the same position (stopping if the CD name wasn't in the CSV title), joined the tracks with
 ffmpeg's concat demuxer into ALAC, wrote the tags, and then set the podcast flag with `internal/podcast` (Python's mutagen): iTunes silently refuses a file whose media

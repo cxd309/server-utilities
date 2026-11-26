@@ -21,7 +21,7 @@ type episode struct {
 // manifestColumns are the columns a manifest must have, found by name in its header
 var manifestColumns = []string{"source", "show", "artist", "title", "release_date", "description"}
 
-// readManifest parses a manifest CSV. Rows are episodes in order; a show's episodes are
+// readManifest parses a manifest CSV. Rows are episodes in order, and a show's episodes are
 // numbered in the order they appear. release_date is RFC 3339, e.g. "1978-03-08T22:30:00Z".
 // Every field but description must be filled in
 func readManifest(r io.Reader) (episodes []episode, err error) {

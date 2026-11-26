@@ -17,12 +17,12 @@ artist Mark Evans, media kind Podcast plus the podcast flag).
   (5 series of 6 episodes, 2007–2012). The series and episode are in each description.
 - Episode data is from the BBC programme pages, collected into `episodes.csv`.
 - **Artwork:** the download has none, so `cover.jpg` here (the Audible cover, 894×894) is
-  embedded in every episode. The first run happened before it was added; the art was then put
+  embedded in every episode. The first run happened before it was added, so the art was then put
   into the existing files in place with mutagen, so their paths (and iTunes entries) didn't change.
 
 ## How it works
 
-A one-off program, `one-off/bleak-expectations/main.go` (deleted since; it's in git history),
+A one-off program, `one-off/bleak-expectations/main.go` (since deleted, but in git history),
 checked the files were Chapter 1 … 30 in order, paired each with the CSV row in the same
 position, copied the audio with ffmpeg while writing the tags, and set the podcast flag with
 `internal/podcast`. Existing episodes were skipped, so it could be re-run.
