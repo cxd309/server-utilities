@@ -54,7 +54,11 @@ func run(ctx context.Context, manifest string, dryRun bool) (err error) {
 	sources := make([]source, len(episodes))
 	for i, ep := range episodes {
 		totals[ep.show]++
-		if sources[i], err = probeSource(ctx, filepath.Join(libraryRoot, ep.source)); err != nil {
+		var path string
+		if path, err = findFile(libraryRoot, ep.source); err != nil {
+			return &rowError{Row: i + 2, Err: err}
+		}
+		if sources[i], err = probeSource(ctx, path); err != nil {
 			return &rowError{Row: i + 2, Err: err}
 		}
 	}
