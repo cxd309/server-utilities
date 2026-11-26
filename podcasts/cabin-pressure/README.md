@@ -21,15 +21,18 @@ lossless ALAC (16-bit/44.1 kHz) with the box set cover, tagged as a podcast
 
 ## How it works
 
-`main.go` groups the CD tracks by the name before the last ", TR ", pairs each group with
-the CSV row in the same position (stopping if the CD name isn't in the CSV title), joins the
-tracks with ffmpeg's concat demuxer into ALAC, writes the tags, and then sets the podcast
-flag with `internal/podcast` (Python's mutagen): iTunes silently refuses a file whose media
-kind is Podcast without it, and ffmpeg can't write it. Existing episodes are
-skipped, so it can be re-run.
+A one-off program, `one-off/cabin-pressure/main.go` (deleted since; it's in git history),
+grouped the CD tracks by the name before the last ", TR ", paired each group with the CSV row
+in the same position (stopping if the CD name wasn't in the CSV title), joined the tracks with
+ffmpeg's concat demuxer into ALAC, wrote the tags, and then set the podcast flag with `internal/podcast` (Python's mutagen): iTunes silently refuses a file whose media
+kind is Podcast without it, and ffmpeg can't write it. Existing episodes were
+skipped, so it could be re-run.
+
+`podcast-import` can't do this one: it makes one episode per file, and these episodes were
+each about nine CD tracks joined together.
 
 ```sh
-go run ./one-off/cabin-pressure --dry-run   # the plan
+go run ./one-off/cabin-pressure --dry-run   # the plan, as it was run
 go run ./one-off/cabin-pressure             # writes the episodes
 ```
 

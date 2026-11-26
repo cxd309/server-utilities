@@ -22,14 +22,16 @@ artist Mark Evans, media kind Podcast plus the podcast flag).
 
 ## How it works
 
-`main.go` checks the files are Chapter 1 … 30 in order, pairs each with the CSV row in the
-same position, copies the audio with ffmpeg while writing the tags, and sets the podcast flag
-with `internal/podcast`. Existing episodes are skipped, so it can be re-run.
+A one-off program, `one-off/bleak-expectations/main.go` (deleted since; it's in git history),
+checked the files were Chapter 1 … 30 in order, paired each with the CSV row in the same
+position, copied the audio with ffmpeg while writing the tags, and set the podcast flag with
+`internal/podcast`. Existing episodes were skipped, so it could be re-run.
 
 ```sh
-go run ./one-off/bleak-expectations --dry-run
+go run ./one-off/bleak-expectations --dry-run   # as it was run
 go run ./one-off/bleak-expectations
 ```
 
 **Source removed:** once the episodes were in `/mnt/prudence/podcasts`, the source folder was
-deleted from the audiobook library (2026-11-25), so this script can no longer be re-run as is.
+deleted from the audiobook library (2026-11-25), so the program could no longer be re-run.
+With one file per episode, it's the kind of job `podcast-import` now does from a manifest.

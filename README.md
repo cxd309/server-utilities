@@ -7,6 +7,7 @@ Tools for my music and audiobook library, and for getting it onto an iPod.
 - `music-sync` - keep the Music app's library in step with the music mirror
 - `m4b-split` - split an Audible `.m4b` into one file per chapter, losslessly, ready for Picard
 - `audiobook-mirror` - join each audiobook's chapters into iPod-safe `.m4b` parts with chapter markers
+- `podcast-import` - turn library files into podcast episodes, one per file, from a CSV manifest
 
 ## Picard
 
@@ -41,7 +42,7 @@ saying where each one starts, so audiobook-mirror gives each its own named parts
 030 The Mystery of the Blue Train
 ```
 
-## One-off jobs
+## Podcasts
 
-`one-off/` holds scripts for unusual releases, run once by hand and kept as worked examples.
-See `one-off/README.md`.
+`podcasts/` has a folder per show made from the audiobook library: its `episodes.csv` for
+`podcast-import`, and a README of what was done and why. See `podcasts/README.md`.
