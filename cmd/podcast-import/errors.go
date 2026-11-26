@@ -10,6 +10,7 @@ var (
 	errMissingColumn = errors.New("manifest is missing a column")
 	errEmptyField    = errors.New("field is empty")
 	errNoAudio       = errors.New("source has no audio stream")
+	errBadCut        = errors.New("start must be 0 or more, and end after start")
 )
 
 // rowError is returned for a bad row in the manifest. Row counts from 1 at the header

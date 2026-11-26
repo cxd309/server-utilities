@@ -5,15 +5,21 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 
 	"github.com/cxd309/server-utilities/internal/ffmpeg"
 	"github.com/cxd309/server-utilities/internal/podcast"
 )
 
-// fileName is the file for episode n of a show, e.g. "01 Fit the First.m4a"
+// unsafeInName replaces the characters Windows can't have in a file name.
+// The share serves the podcasts to iTunes on Windows, which would see a mangled name instead
+var unsafeInName = strings.NewReplacer("/", "-", "\\", "-", ":", "", "*", "", "?", "", `"`, "", "<", "", ">", "", "|", "")
+
+// fileName is the file for episode n of a show, e.g. "01 Fit the First.m4a".
+// The episode's title tag keeps the characters its file name can't
 func fileName(n int, title string) (name string) {
-	name = fmt.Sprintf("%02d %s.m4a", n, strings.NewReplacer("/", "-", ":", "").Replace(title))
+	name = fmt.Sprintf("%02d %s.m4a", n, strings.TrimSpace(unsafeInName.Replace(title)))
 	return name
 }
 
@@ -25,9 +31,14 @@ type source struct {
 }
 
 // copyArgs makes episode n of total from src at out, tagged as a podcast.
-// AAC is copied as it is, and anything else, such as FLAC from a CD, becomes 16-bit ALAC
+// AAC is copied as it is, and anything else, such as FLAC from a CD, becomes 16-bit ALAC.
+// An episode cut from part of the source seeks to its start, which copied AAC can only do
+// to a whole packet (23 ms at 44.1 kHz), so cuts are best placed in a silence
 func copyArgs(src source, out string, ep episode, n, total int) (args []string) {
-	args = []string{"-i", src.path}
+	if ep.start > 0 {
+		args = append(args, "-ss", strconv.FormatFloat(ep.start, 'f', 3, 64))
+	}
+	args = append(args, "-i", src.path)
 	switch src.cover {
 	case "":
 		args = append(args, "-map", "0:a:0")
@@ -44,6 +55,9 @@ func copyArgs(src source, out string, ep episode, n, total int) (args []string) 
 	}
 	if src.cover != "" {
 		args = append(args, "-c:v", "copy", "-disposition:v", "attached_pic")
+	}
+	if ep.end > 0 {
+		args = append(args, "-t", strconv.FormatFloat(ep.end-ep.start, 'f', 3, 64)) // to the millisecond
 	}
 	return append(args,
 		"-metadata", "title="+ep.title,

@@ -60,3 +60,23 @@ func TestReadManifestBadDate(t *testing.T) {
 	require.ErrorAs(t, err, &re)
 	assert.Equal(t, 2, re.Row)
 }
+
+func TestReadManifestCuts(t *testing.T) {
+	csv := "source,show,artist,title,release_date,description,start,end\n" +
+		"a.m4a,S,A,One,2018-03-08T18:30:00Z,,,2355.04\n" +
+		"a.m4a,S,A,Two,2018-03-15T18:30:00Z,,2355.04,4543.94\n" +
+		"a.m4a,S,A,Six,2018-04-12T18:30:00+01:00,,11060.48,\n"
+	episodes, err := readManifest(strings.NewReader(csv))
+	require.NoError(t, err)
+	require.Len(t, episodes, 3)
+	assert.Equal(t, [2]float64{0, 2355.04}, [2]float64{episodes[0].start, episodes[0].end})
+	assert.Equal(t, [2]float64{2355.04, 4543.94}, [2]float64{episodes[1].start, episodes[1].end})
+	assert.Equal(t, [2]float64{11060.48, 0}, [2]float64{episodes[2].start, episodes[2].end}, "to the end")
+
+	for _, bad := range []string{",abc", "-1,", "10,5", "10,10"} {
+		_, err = readManifest(strings.NewReader("source,show,artist,title,release_date,description,start,end\n" +
+			"a.m4a,S,A,T,2018-03-08T18:30:00Z,," + bad + "\n"))
+		var re *rowError
+		assert.ErrorAs(t, err, &re, bad)
+	}
+}
