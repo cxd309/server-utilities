@@ -20,7 +20,7 @@ func coverArgs(src, out, codec string) (args []string) {
 	} else {
 		args = append(args, "-c:v", "mjpeg", "-q:v", "2") // 2 is near the best JPEG quality
 	}
-	return append(args, "-f", "image2", out)
+	return append(args, "-update", "1", "-f", "image2", out) // one picture, not a numbered sequence
 }
 
 // saveCover saves src's embedded picture, whose codec is codec, to out

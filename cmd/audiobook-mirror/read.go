@@ -57,6 +57,9 @@ func chapterFromInfo(path string, info ffmpeg.Info) (c chapterFile, sampleRate i
 		frames: framesFor(seconds, sampleRate),
 		codec:  audio.CodecName,
 	}
+	if c.narrator = strings.TrimSpace(tags["composer"]); c.narrator == "" {
+		c.narrator = listItem(tags["artists"], 1)
+	}
 	if c.title == "" {
 		c.title = strings.TrimSuffix(filepath.Base(path), filepath.Ext(path))
 	}

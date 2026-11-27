@@ -62,7 +62,11 @@ func buildBook(ctx context.Context, b book, d download, limit int64) (parts int,
 	for i, part := range plan {
 		n := i + 1
 		out := filepath.Join(tmp, fmt.Sprintf("Part %02d.m4b", n))
-		tags := tagLines(d.tags, titles[i], n, len(plan))
+		book := d.tags
+		if narrator := d.chapters[part[0].chapter].narrator; narrator != "" {
+			book.narrator = narrator // a part's narrator is its first chapter's, as it can change within a book
+		}
+		tags := tagLines(book, titles[i], n, len(plan))
 		if err = joinPart(ctx, part, d.chapters, d.sampleRate, tags, cover, out); err != nil {
 			return 0, err
 		}

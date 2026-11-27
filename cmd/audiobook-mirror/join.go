@@ -16,8 +16,13 @@ type chapterFile struct {
 	title   string
 	frames  int64
 	codec   string // ffprobe's codec name, such as "aac" or "flac"
-	section string // from sections.txt, e.g. "Animal Farm"; "" for none
+	section string // from sections.txt, e.g. "Animal Farm", or "" for none
 	bytes   int64  // file size, for estimating how big parts will be
+
+	// narrator reads this chapter: its composer, or failing that the second of its artists.
+	// It can change within a book, like The Complete Hitchhiker's Guide's Stephen Fry then
+	// Martin Freeman. "" when the tags don't say
+	narrator string
 }
 
 // frameTime is the time where frame starts, as ffmpeg seconds with six decimals.
@@ -168,7 +173,7 @@ func savePicture(ctx context.Context, src string) (path string, err error) {
 		return "", err
 	}
 	path = filepath.Join(dir, "cover.jpg")
-	if err = ffmpeg.Run(ctx, "-i", src, "-map", "0:v:0", "-frames:v", "1", "-c:v", "copy", "-f", "image2", path); err != nil {
+	if err = ffmpeg.Run(ctx, "-i", src, "-map", "0:v:0", "-frames:v", "1", "-c:v", "copy", "-update", "1", "-f", "image2", path); err != nil {
 		_ = os.RemoveAll(dir)
 		return "", err
 	}

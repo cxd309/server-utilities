@@ -58,6 +58,24 @@ func TestChapterFromInfo(t *testing.T) {
 			44100,
 		},
 		{
+			"narrator from the artists",
+			ffmpeg.Info{
+				Format:  ffmpeg.Format{Duration: "1.0", Tags: map[string]string{"ARTISTS": "Douglas Adams;Martin Freeman"}},
+				Streams: []ffmpeg.Stream{audio},
+			},
+			chapterFile{path: "/b/001 x.m4a", title: "001 x", frames: 44, codec: "aac", narrator: "Martin Freeman"},
+			44100,
+		},
+		{
+			"narrator from the composer first",
+			ffmpeg.Info{
+				Format:  ffmpeg.Format{Duration: "1.0", Tags: map[string]string{"composer": "Jonathan Keeble", "ARTISTS": "George Orwell"}},
+				Streams: []ffmpeg.Stream{audio},
+			},
+			chapterFile{path: "/b/001 x.m4a", title: "001 x", frames: 44, codec: "aac", narrator: "Jonathan Keeble"},
+			44100,
+		},
+		{
 			"no title tag",
 			ffmpeg.Info{
 				Format:  ffmpeg.Format{Duration: "1.0"},

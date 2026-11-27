@@ -62,6 +62,8 @@ func TestBuildBook(t *testing.T) {
 
 	d, err := readDownload(ctx, src)
 	require.NoError(t, err)
+	d.tags.narrator = "A Reader"
+	d.chapters[1].narrator = "Another Reader" // as when a collection changes reader
 
 	root := t.TempDir()
 	b := book{src: src, dst: filepath.Join(root, "Author", "Test Book (A Reader)")}
@@ -78,4 +80,9 @@ func TestBuildBook(t *testing.T) {
 	assert.Equal(t, "Test Book (A Reader), Part 2 of 2", info.Format.Tags["title"])
 	assert.Equal(t, "Test Book (A Reader)", info.Format.Tags["album"], "named after the folder, not the album tag")
 	assert.Equal(t, "2/2", info.Format.Tags["track"])
+	assert.Equal(t, "Another Reader", info.Format.Tags["composer"], "the part's own narrator")
+
+	first, err := ffmpeg.Probe(ctx, filepath.Join(b.dst, "Part 01.m4b"))
+	require.NoError(t, err)
+	assert.Equal(t, "A Reader", first.Format.Tags["composer"], "the book's narrator, when the chapter has none")
 }
