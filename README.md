@@ -4,7 +4,6 @@ Tools for my music and audiobook library, and for getting it onto an iPod.
 
 - `ripcd` - rip CDs with whipper, matched against MusicBrainz with a given barcode
 - `music-mirror` - mirror the music library for the iPod: FLAC becomes ALAC, MP3 is copied and re-tagged
-- `music-sync` - keep the Music app's library in step with the music mirror
 - `m4b-split` - split an Audible `.m4b` into one file per chapter, losslessly, ready for Picard
 - `audiobook-mirror` - join each audiobook's chapters into iPod-safe `.m4b` parts with chapter markers
 - `podcast-import` - turn library files into podcast episodes, one per file, from a CSV manifest

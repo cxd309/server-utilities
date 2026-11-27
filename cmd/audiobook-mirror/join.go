@@ -157,9 +157,8 @@ func joinPart(ctx context.Context, part []piece, chapters []chapterFile, sampleR
 }
 
 // canCopy reports whether a book's audio can go into its parts unchanged.
-// The iPod plays AAC at any sample rate (22 kHz scratched on the Mac-formatted mini,
-// to be retested on the Windows-formatted iPods) but can't play FLAC,
-// so anything other than AAC is converted to ALAC
+// The 7th gen iPod plays AAC at any sample rate (22 kHz scratched on the mini)
+// but can't play FLAC, so anything other than AAC is converted to ALAC
 func canCopy(codec string) (yes bool) {
 	yes = codec == "aac"
 	return yes

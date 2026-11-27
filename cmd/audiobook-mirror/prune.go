@@ -77,7 +77,8 @@ func isLeftover(name string) (yes bool) {
 }
 
 // onlyParts reports whether dir holds nothing but .m4b files and hidden files,
-// meaning everything in it was written by audiobook-mirror (or the Mac)
+// meaning everything in it was written by audiobook-mirror.
+// Hidden files, like the .DS_Store a Mac leaves, don't count
 func onlyParts(dir string) (ours bool, err error) {
 	var entries []os.DirEntry
 	if entries, err = os.ReadDir(dir); err != nil {

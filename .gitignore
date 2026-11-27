@@ -33,6 +33,13 @@ go.work.sum
 # .vscode/
 dist/
 
+# a tool built in the repo root with go build ./cmd/<tool>
+/audiobook-mirror
+/m4b-split
+/music-mirror
+/podcast-import
+/ripcd
+
 **/.DS_Store
 
 # personal notes
